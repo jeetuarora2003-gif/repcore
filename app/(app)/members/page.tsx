@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EmptyState } from "@/components/shared/empty-state";
+import { ImageUpload } from "@/components/shared/image-upload";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 
 export default async function MembersPage({
@@ -60,6 +60,23 @@ export default async function MembersPage({
             <div className="space-y-2">
               <Label htmlFor="startDate">Start date</Label>
               <Input id="startDate" name="startDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <select
+                id="gender"
+                name="gender"
+                className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                defaultValue=""
+              >
+                <option value="" disabled>Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2 xl:col-span-1">
+              <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" />
             </div>
             <input type="hidden" name="saleReason" value="new_join" />
             <div className="sm:col-span-2 xl:col-span-4">

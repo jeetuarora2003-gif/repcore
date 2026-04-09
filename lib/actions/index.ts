@@ -6,6 +6,7 @@ import { getSessionContext } from "@/lib/auth/session";
 import {
   applyCreditSchema,
   attendanceSchema,
+  bodyMeasurementSchema,
   correctInvoiceSchema,
   freezeSubscriptionSchema,
   gymProfileSchema,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/rpc/repcore";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toPaise } from "@/lib/utils/format";
+import { logAdminAction } from "@/lib/utils/admin-log";
 
 function asString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
@@ -78,6 +80,8 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
+  logAdminAction("login", { email: values.email });
+
   const session = await getSessionContext();
   if (session.gym) {
     redirect("/dashboard");
@@ -107,6 +111,8 @@ export async function signupAction(formData: FormData) {
   if (error) {
     redirect(`/signup?error=${encodeURIComponent(error.message)}`);
   }
+
+  logAdminAction("signup", { email: values.email, fullName: values.fullName });
 
   redirect("/setup");
 }
@@ -145,6 +151,12 @@ export async function completeOnboardingAction(formData: FormData) {
   if (error) {
     redirect(`/setup?error=${encodeURIComponent(error.message)}`);
   }
+
+  logAdminAction("onboarding", { 
+    email: session.user.email, 
+    gymName: values.gymName, 
+    phone: values.gymPhone 
+  });
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
@@ -186,6 +198,7 @@ export async function updateMemberProfileAction(formData: FormData) {
     fullName: asString(formData.get("fullName")),
     phone: asString(formData.get("phone")),
     photoUrl: asString(formData.get("photoUrl")),
+    gender: asString(formData.get("gender")),
     notes: asString(formData.get("notes")),
   });
 
@@ -197,6 +210,7 @@ export async function updateMemberProfileAction(formData: FormData) {
       full_name: values.fullName,
       phone: values.phone,
       photo_url: values.photoUrl || null,
+      gender: values.gender || null,
       notes: values.notes || null,
     })
     .eq("id", values.memberId)
@@ -248,6 +262,7 @@ export async function createMembershipSaleAction(formData: FormData) {
     fullName: asString(formData.get("fullName")),
     phone: asString(formData.get("phone")),
     photoUrl: asString(formData.get("photoUrl")),
+    gender: asString(formData.get("gender")),
     notes: asString(formData.get("notes")),
     planId: asString(formData.get("planId")),
     startDate: asString(formData.get("startDate")),
@@ -260,6 +275,7 @@ export async function createMembershipSaleAction(formData: FormData) {
     fullName: values.fullName,
     phone: values.phone,
     photoUrl: values.photoUrl,
+    gender: values.gender,
     notes: values.notes,
     planId: values.planId,
     startDate: values.startDate,
@@ -458,6 +474,33 @@ export async function markAttendanceAction(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function recordBodyMeasurementAction(membershipId: string, formData: FormData) {
+  const session = await requireGymContext();
+  const values = bodyMeasurementSchema.parse({
+    weightKg: formData.get("weightKg"),
+    bodyFatPercentage: formData.get("bodyFatPercentage"),
+    waistCm: formData.get("waistCm"),
+    chestCm: formData.get("chestCm"),
+    bicepsCm: formData.get("bicepsCm"),
+    recordedOn: formData.get("recordedOn"),
+  });
+
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase.from("member_body_logs").insert({
+    gym_id: session.gym!.id,
+    membership_id: membershipId,
+    weight_kg: values.weightKg,
+    body_fat_percentage: values.bodyFatPercentage,
+    waist_cm: values.waistCm,
+    chest_cm: values.chestCm,
+    biceps_cm: values.bicepsCm,
+    recorded_on: values.recordedOn,
+  });
+
+  assertSupabaseSuccess(error);
+  revalidatePath(`/members/${membershipId}`);
+}
+
 export async function updateGymProfileAction(formData: FormData) {
   const session = await requireOwnerContext();
   const supabase = createSupabaseServerClient();
@@ -466,6 +509,7 @@ export async function updateGymProfileAction(formData: FormData) {
     phone: asString(formData.get("phone")),
     address: asString(formData.get("address")),
     logoUrl: asString(formData.get("logoUrl")),
+    upiVpa: asString(formData.get("upiVpa")),
     gstNumber: asString(formData.get("gstNumber")),
   });
 
@@ -476,6 +520,7 @@ export async function updateGymProfileAction(formData: FormData) {
       phone: values.phone,
       address: values.address || null,
       logo_url: values.logoUrl || null,
+      upi_vpa: values.upiVpa || null,
       gst_number: values.gstNumber || null,
     })
     .eq("id", session.gym!.id);

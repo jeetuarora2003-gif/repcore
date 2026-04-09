@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/shared/image-upload";
 
 export default async function SettingsPage() {
   const session = await getSessionContext();
@@ -40,9 +41,17 @@ export default async function SettingsPage() {
               <Label htmlFor="address">Address</Label>
               <Input id="address" name="address" defaultValue={session.gym?.address ?? ""} />
             </div>
+            <div className="space-y-4 sm:col-span-2">
+              <ImageUpload 
+                bucket="gym_logos" 
+                name="logoUrl" 
+                label="Gym Logo" 
+                defaultValue={session.gym?.logo_url ?? ""} 
+              />
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
-              <Input id="logoUrl" name="logoUrl" defaultValue={session.gym?.logo_url ?? ""} />
+              <Label htmlFor="upiVpa">UPI ID (for dynamic QR)</Label>
+              <Input id="upiVpa" name="upiVpa" placeholder="merchant@okupi" defaultValue={session.gym?.upi_vpa ?? ""} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="gstNumber">GST number</Label>
@@ -136,6 +145,33 @@ export default async function SettingsPage() {
             );
           })}
         </CardContent>
+      </Card>
+
+      <Card>
+          <CardHeader>
+            <CardTitle>Notifications & PWA</CardTitle>
+            <CardDescription>Configure how you receive alerts.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Browser Push Notifications</Label>
+                <p className="text-xs text-muted-foreground">Get alerted even when the app is closed.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] uppercase">Coming Soon</Badge>
+                <Switch disabled />
+              </div>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Daily Attendance Report</Label>
+                <p className="text-xs text-muted-foreground">Receive a WhatsApp summary at 10 PM.</p>
+              </div>
+              <Switch defaultChecked={session.gym?.tier === "growth"} />
+            </div>
+          </CardContent>
       </Card>
     </div>
   );

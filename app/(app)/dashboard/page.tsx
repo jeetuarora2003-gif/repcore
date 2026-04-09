@@ -89,23 +89,55 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
-            <p className="text-sm text-muted-foreground">Payments, attendance, and reminders.</p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {dashboard.recentActivity.map((activity) => (
-              <div key={`${activity.type}-${activity.id}`} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium">{activity.title}</p>
-                  <span className="text-xs text-muted-foreground">{formatDate(activity.created_at, "dd MMM, hh:mm a")}</span>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{activity.body}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Rapid Check-in</CardTitle>
+                    <p className="text-sm text-muted-foreground">Select a member to mark today's attendance.</p>
+                </CardHeader>
+                <CardContent>
+                    <form action={async (formData) => {
+                        "use server";
+                        await markAttendanceAction(formData);
+                    }} className="space-y-4">
+                        <select
+                            name="membershipId"
+                            required
+                            className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-base text-foreground focus:ring-2 focus:ring-accent"
+                        >
+                            <option value="" disabled selected>Search member...</option>
+                            {dashboard.memberships.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                    {m.members.full_name} ({m.members.phone})
+                                </option>
+                            ))}
+                        </select>
+                        <input type="hidden" name="checkInDate" value={new Date().toISOString().slice(0, 10)} />
+                        <Button type="submit" className="w-full h-12 rounded-2xl bg-accent shadow-glow">
+                            Log Entry
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent activity</CardTitle>
+                    <p className="text-sm text-muted-foreground">Payments, attendance, and reminders.</p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {dashboard.recentActivity.map((activity) => (
+                    <div key={`${activity.type}-${activity.id}`} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        <span className="text-xs text-muted-foreground">{formatDate(activity.created_at, "dd MMM, hh:mm a")}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{activity.body}</p>
+                    </div>
+                    ))}
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );

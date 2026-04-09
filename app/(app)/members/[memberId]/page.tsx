@@ -16,9 +16,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageUpload } from "@/components/shared/image-upload";
+import { BodyMeasurementForm } from "@/components/members/body-measurement-form";
+import { DigitalIdCard } from "@/components/members/digital-id-card";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { renderReminderTemplate } from "@/lib/utils/reminders";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { QrCode, Share2 } from "lucide-react";
 
 export default async function MemberDetailPage({
   params,
@@ -69,164 +74,231 @@ export default async function MemberDetailPage({
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={updateMemberProfileAction} className="grid gap-4 sm:grid-cols-2">
-              <input type="hidden" name="memberId" value={member.member_id} />
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Name</Label>
-                <Input id="fullName" name="fullName" defaultValue={member.members.full_name} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" defaultValue={member.members.phone} required />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="photoUrl">Photo URL</Label>
-                <Input id="photoUrl" name="photoUrl" defaultValue={member.members.photo_url ?? ""} />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" name="notes" defaultValue={member.members.notes ?? ""} />
-              </div>
-              <div className="sm:col-span-2 flex flex-wrap gap-3">
-                <Button type="submit">Update profile</Button>
-              </div>
-            </form>
-            <form action={archiveMembershipAction} className="mt-4">
-              <input type="hidden" name="membershipId" value={member.id} />
-              <input type="hidden" name="archiveReason" value="Archived from member detail" />
-              <Button type="submit" variant="outline">
-                Archive member
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/[0.03] p-1 h-12">
+          <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Overview</TabsTrigger>
+          <TabsTrigger value="billing" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Billing</TabsTrigger>
+          <TabsTrigger value="progress" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Progress</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="rounded-2xl border border-border bg-white/[0.03] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">{member.currentSubscription?.plan_snapshot_name ?? "No active plan"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {member.currentSubscription ? `Ends ${formatDate(member.currentSubscription.effective_end_date)}` : "No live subscription"}
-                  </p>
-                </div>
-                <Badge variant={member.status === "expired" ? "danger" : member.status === "expiring_soon" ? "warning" : "success"}>
-                  {member.status.replaceAll("_", " ")}
-                </Badge>
-              </div>
-            </div>
-
-            <form action={renewSubscriptionAction} className="grid gap-4">
-              <input type="hidden" name="membershipId" value={member.id} />
-              <div className="space-y-2">
-                <Label htmlFor="planId">Renew with plan</Label>
-                <select
-                  id="planId"
-                  name="planId"
-                  defaultValue={plans[0]?.id ?? ""}
-                  required
-                  className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  {plans.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name} ({plan.duration_days} days)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Optional start date</Label>
-                <Input id="startDate" name="startDate" type="date" />
-              </div>
-              <Button type="submit">Renew subscription</Button>
-            </form>
-
-            {member.currentSubscription ? (
-              <form action={freezeSubscriptionAction} className="grid gap-4">
-                <input type="hidden" name="subscriptionId" value={member.currentSubscription.subscription_id} />
-                <div className="grid gap-4 sm:grid-cols-2">
+        <TabsContent value="overview" className="space-y-6 mt-6">
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            {/* Existing Profile Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={updateMemberProfileAction} className="grid gap-4 sm:grid-cols-2">
+                  <input type="hidden" name="memberId" value={member.member_id} />
                   <div className="space-y-2">
-                    <Label htmlFor="freezeStartDate">Freeze start</Label>
-                    <Input id="freezeStartDate" name="freezeStartDate" type="date" required />
+                    <Label htmlFor="fullName">Name</Label>
+                    <Input id="fullName" name="fullName" defaultValue={member.members.full_name} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="freezeEndDate">Freeze end</Label>
-                    <Input id="freezeEndDate" name="freezeEndDate" type="date" required />
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" name="phone" defaultValue={member.members.phone} required />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reason">Reason</Label>
-                  <Input id="reason" name="reason" placeholder="Out of town" />
-                </div>
-                <Button type="submit" variant="outline">
-                  Freeze subscription
-                </Button>
-              </form>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoices</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {member.invoices.map((invoice) => (
-              <div key={invoice.invoice_id} className="rounded-2xl border border-border bg-white/[0.03] p-4">
-                <p className="font-medium">{invoice.invoice_number}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatCurrency(invoice.total_amount_paise)} - Due {formatCurrency(invoice.amount_due_paise)}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Payments</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {member.payments.map((payment) => (
-              <div key={payment.id} className="rounded-2xl border border-border bg-white/[0.03] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{formatCurrency(payment.amount_paise)}</p>
-                  <Button asChild variant="ghost" size="sm" className="px-0">
-                    <Link href={`/api/receipts/${payment.id}`}>Receipt PDF</Link>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <select
+                      id="gender"
+                      name="gender"
+                      defaultValue={member.members.gender ?? ""}
+                      className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <ImageUpload 
+                      bucket="member_photos" 
+                      name="photoUrl" 
+                      label="Member Photo" 
+                      defaultValue={member.members.photo_url ?? ""} 
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea id="notes" name="notes" defaultValue={member.members.notes ?? ""} />
+                  </div>
+                  <div className="sm:col-span-2 flex flex-wrap gap-3">
+                    <Button type="submit">Update profile</Button>
+                  </div>
+                </form>
+                <form action={archiveMembershipAction} className="mt-4">
+                  <input type="hidden" name="membershipId" value={member.id} />
+                  <input type="hidden" name="archiveReason" value="Archived from member detail" />
+                  <Button type="submit" variant="outline">
+                    Archive member
                   </Button>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{formatDate(payment.received_on)}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                </form>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {member.attendance.map((entry) => (
-              <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] p-4">
-                <p className="font-medium">{formatDate(entry.check_in_date)}</p>
-                <p className="mt-1 text-sm text-muted-foreground">Manual check-in</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+            <div className="space-y-6">
+                <Card className="panel bg-[#050505] overflow-hidden border-none shadow-2xl">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <QrCode className="h-5 w-5 text-accent" />
+                            Digital Identity Card
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex justify-center scale-90 sm:scale-100 origin-top">
+                            <DigitalIdCard 
+                                member={{
+                                    fullName: member.members.full_name,
+                                    photoUrl: member.members.photo_url,
+                                    status: member.status,
+                                    expiresAt: member.currentSubscription?.effective_end_date,
+                                    gymName: session.gym!.name,
+                                    gymLogo: session.gym!.logo_url
+                                }} 
+                            />
+                        </div>
+                        
+                        <div className="grid gap-3 p-2 max-w-sm mx-auto">
+                            <Button asChild className="h-12 rounded-2xl bg-accent hover:bg-accent/90">
+                                <a href={`/id/${member.id}`} target="_blank" rel="noopener noreferrer">
+                                    <Share2 className="mr-2 h-4 w-4" />
+                                    Preview & Share ID Card
+                                </a>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Attendance History</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {member.attendance.slice(0, 5).map((entry) => (
+                            <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                                <p className="font-medium">{formatDate(entry.check_in_date)}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6 mt-6">
+            <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Active Subscriptions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="rounded-2xl border border-border bg-white/[0.03] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                            <p className="font-medium">{member.currentSubscription?.plan_snapshot_name ?? "No active plan"}</p>
+                            <p className="text-sm text-muted-foreground">
+                                {member.currentSubscription ? `Ends ${formatDate(member.currentSubscription.effective_end_date)}` : "No live subscription"}
+                            </p>
+                            </div>
+                            <Badge variant={member.status === "expired" ? "danger" : member.status === "expiring_soon" ? "warning" : "success"}>
+                            {member.status.replaceAll("_", " ")}
+                            </Badge>
+                        </div>
+                        </div>
+
+                        <form action={renewSubscriptionAction} className="grid gap-4">
+                            <input type="hidden" name="membershipId" value={member.id} />
+                            <div className="space-y-2">
+                                <Label htmlFor="planId">Renew with plan</Label>
+                                <select
+                                id="planId"
+                                name="planId"
+                                defaultValue={plans[0]?.id ?? ""}
+                                required
+                                className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                >
+                                {plans.map((plan) => (
+                                    <option key={plan.id} value={plan.id}>
+                                    {plan.name} ({plan.duration_days} days)
+                                    </option>
+                                ))}
+                                </select>
+                            </div>
+                            <Button type="submit">Renew subscription</Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader><CardTitle>Invoices</CardTitle></CardHeader>
+                        <CardContent className="space-y-3">
+                            {member.invoices.map((inv) => (
+                                <div key={inv.invoice_id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                                    {inv.invoice_number} - Due {formatCurrency(inv.amount_due_paise)}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle>Recent Payments</CardTitle></CardHeader>
+                        <CardContent className="space-y-3">
+                            {member.payments.map((p) => (
+                                <div key={p.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                                    {formatCurrency(p.amount_paise)} on {formatDate(p.received_on)}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="progress" className="space-y-6 mt-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Fitness Journey</CardTitle>
+                    <p className="text-sm text-muted-foreground">Log and track body measurements over time.</p>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                    <BodyMeasurementForm membershipId={member.id} />
+                    
+                    {member.bodyLogs.length > 0 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Progress</h3>
+                            <div className="overflow-x-auto rounded-3xl border border-border">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-white/[0.03] text-muted-foreground font-medium">
+                                        <tr>
+                                            <th className="px-4 py-3">Date</th>
+                                            <th className="px-4 py-3">Weight</th>
+                                            <th className="px-4 py-3">Fat %</th>
+                                            <th className="px-4 py-3">Biceps</th>
+                                            <th className="px-4 py-3">Waist</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/50">
+                                        {member.bodyLogs.map((log) => (
+                                            <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <td className="px-4 py-4 font-medium">{formatDate(log.recorded_on)}</td>
+                                                <td className="px-4 py-4">{log.weight_kg ?? "-"} kg</td>
+                                                <td className="px-4 py-4">{log.body_fat_percentage ?? "-"} %</td>
+                                                <td className="px-4 py-4">{log.biceps_cm ?? "-"} cm</td>
+                                                <td className="px-4 py-4">{log.waist_cm ?? "-"} cm</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

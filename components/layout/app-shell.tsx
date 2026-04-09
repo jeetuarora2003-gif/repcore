@@ -59,16 +59,16 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
           <p className="mt-3 text-sm font-medium">Role: {role === "owner" ? "Owner" : "Front desk"}</p>
           <p className="mt-1 text-sm text-muted-foreground">Your gym. Fully in control.</p>
           <Button asChild variant="outline" className="mt-4 w-full justify-between">
-            <Link href="/logout">
+            <a href="/logout">
               Sign out
               <LogOut className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
         </div>
       </aside>
 
       <div className="flex min-h-screen flex-col">
-        <header className="mobile-top-safe sticky top-0 z-40 border-b border-border bg-black/60 px-4 py-4 backdrop-blur-sm sm:px-6 lg:px-8">
+        <header className="mobile-top-safe sticky top-0 z-40 border-b border-border bg-black/60 px-4 pb-4 backdrop-blur-sm sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="lg:hidden">
@@ -87,10 +87,10 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
                 ))}
                 <Separator className="my-2" />
                 <DropdownMenuItem asChild>
-                  <Link href="/logout" className="flex items-center gap-3 text-danger">
+                  <a href="/logout" className="flex items-center gap-3 text-danger">
                     <LogOut className="h-4 w-4" />
                     Sign out
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

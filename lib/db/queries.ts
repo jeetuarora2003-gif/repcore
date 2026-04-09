@@ -353,6 +353,7 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     pendingDueAmount,
     monthlyRevenue,
     recentActivity,
+    memberships: ((membershipsResponse.data as MembershipLookupRow[] | null) ?? []).map(normalizeMembershipLookupRow),
   };
 }
 
@@ -397,6 +398,13 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
   const memberAttendance = attendanceLogs.filter((item) => item.membership_id === membership.id);
   const memberMessages = messageLogs.filter((item) => item.membership_id === membership.id);
 
+  const supabase = createSupabaseServerClient();
+  const bodyLogs = await supabase
+    .from("member_body_logs")
+    .select("*")
+    .eq("membership_id", membership.id)
+    .order("recorded_on", { ascending: false });
+
   return {
     ...membership,
     currentSubscription: getCurrentSubscription(memberSubscriptions),
@@ -405,6 +413,7 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
     payments: memberPayments,
     attendance: memberAttendance,
     messages: memberMessages,
+    bodyLogs: (bodyLogs.data as any[]) ?? [],
     status: deriveMembershipStatus(membership, memberSubscriptions, warningDays, freezes),
   };
 }
@@ -485,4 +494,37 @@ function formatCurrency(valueInPaise: number) {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(valueInPaise / 100);
+}
+
+export async function getPublicMemberCardData(memberId: string) {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("memberships")
+    .select(`
+      id,
+      gym_id,
+      gyms!inner(name, logo_url),
+      members!inner(full_name, photo_url)
+    `)
+    .eq("id", memberId)
+    .single();
+
+  if (error || !data) return null;
+
+  const [subscriptions, freezes] = await Promise.all([
+    supabase.from("subscriptions").select("*").eq("membership_id", memberId),
+    supabase.from("subscription_freezes").select("*").eq("gym_id", data.gym_id),
+  ]);
+
+  const memberSubscriptions = (subscriptions.data as SubscriptionRecord[]) ?? [];
+  const warnings = 7; // Default 7 days warning for public view
+
+  return {
+    fullName: (data.members as any).full_name,
+    photoUrl: (data.members as any).photo_url,
+    status: deriveMembershipStatus(data as any, memberSubscriptions, warnings, (freezes.data as any) ?? []),
+    expiresAt: getCurrentSubscription(memberSubscriptions)?.effective_end_date,
+    gymName: (data.gyms as any).name,
+    gymLogo: (data.gyms as any).logo_url,
+  };
 }

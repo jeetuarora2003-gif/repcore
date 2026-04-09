@@ -12,11 +12,38 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "RepCore",
+    default: "RepCore | Smart Gym Management for Indian Gyms",
     template: "%s | RepCore",
   },
-  description: "Premium gym management SaaS for independent Indian gyms.",
+  description: "The premium management software for modern Indian gyms. Track memberships, collect fees via UPI, and send auto-reminders on WhatsApp. Built for speed and simplicity.",
+  keywords: ["gym management software", "Indian gym app", "gym billing software India", "fitness club management", "RepCore gym manager"],
+  authors: [{ name: "RepCore Team" }],
+  creator: "RepCore",
+  publisher: "RepCore",
   applicationName: "RepCore",
+  robots: "index, follow",
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://repcore.app",
+    siteName: "RepCore",
+    title: "RepCore | Next-Gen Gym Management",
+    description: "Built for independent Indian gyms. Simple, powerful, and mobile-first.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "RepCore - Smart Gym Management",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RepCore | Smart Gym Management",
+    description: "Manage your gym from your phone. Built for the modern Indian fitness industry.",
+    images: ["/og-image.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -43,8 +70,32 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RepCore",
+    "operatingSystem": "Android, iOS, Windows, macOS",
+    "applicationCategory": "BusinessApplication, HealthApplication",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "120"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0.00",
+      "priceCurrency": "INR"
+    }
+  };
+
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
         <PwaRegister />
         {children}

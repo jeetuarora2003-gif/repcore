@@ -32,6 +32,7 @@ export function WhatsappButton({
     <Button
       {...props}
       onClick={() => {
+        window.open(whatsappUrl, "_blank", "noopener,noreferrer");
         startTransition(async () => {
           await logManualReminderAction({
             membershipId,
@@ -42,7 +43,6 @@ export function WhatsappButton({
             renderedBody,
             whatsappUrl,
           });
-          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
         });
       }}
       disabled={isPending || props.disabled}

@@ -114,6 +114,33 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <section className="mx-auto max-w-4xl px-5 py-20 sm:px-8 lg:px-10">
+        <h2 className="text-center text-3xl font-semibold sm:text-4xl">Common Questions</h2>
+        <div className="mt-12 space-y-4">
+          {[
+            { q: "Is RepCore simple for my staff?", a: "Yes. We built RepCore specifically for mobile phones. If your staff can use WhatsApp, they can use RepCore." },
+            { q: "Does it work offline?", a: "RepCore requires internet to sync data with the cloud, but our PWA technology ensures it stays fast and responsive even on slow connections." },
+            { q: "How do I collect payments?", a: "You can record payments via UPI, Cash, or Cards. The app generates digital receipts that you can send directly to members via WhatsApp." },
+          ].map((item) => (
+            <div key={item.q} className="panel p-6 transition-all hover:bg-white/[0.04]">
+              <h3 className="text-base font-semibold text-foreground">{item.q}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-black/20 py-10 text-center">
+        <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} RepCore. Smart Gym Management for India.</p>
+        <div className="mt-4 flex justify-center gap-6 text-xs font-medium text-muted-foreground">
+          <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-foreground">Terms of Service</Link>
+          <Link href="/contact" className="hover:text-foreground">Contact Support</Link>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { RecordPaymentForm } from "@/components/billing/record-payment-form";
 
 export default async function BillingPage({
   searchParams,
@@ -32,88 +33,13 @@ export default async function BillingPage({
             <CardTitle>Record payment</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={recordPaymentAction} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="membershipId">Membership</Label>
-                <select
-                  id="membershipId"
-                  name="membershipId"
-                  defaultValue={selectedMembershipId}
-                  required
-                  className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  {data.memberships.map((membership) => (
-                    <option key={membership.id} value={membership.id}>
-                      {membership.members.full_name} ({membership.members.phone})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="amountRupees">Amount received (INR)</Label>
-                  <Input id="amountRupees" name="amountRupees" type="number" step="0.01" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="receivedOn">Received on</Label>
-                  <Input id="receivedOn" name="receivedOn" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="method">Method</Label>
-                  <select
-                    id="method"
-                    name="method"
-                    defaultValue="upi"
-                    className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <option value="upi">UPI</option>
-                    <option value="cash">Cash</option>
-                    <option value="bank_transfer">Bank transfer</option>
-                    <option value="card">Card</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="referenceCode">Reference</Label>
-                  <Input id="referenceCode" name="referenceCode" placeholder="UTR / note" />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="allocationInvoiceId">Invoice</Label>
-                  <select
-                    id="allocationInvoiceId"
-                    name="allocationInvoiceId"
-                    defaultValue={selectedInvoices[0]?.invoice_id ?? ""}
-                    className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <option value="">Leave unallocated and create credit</option>
-                    {selectedInvoices.map((invoice) => (
-                      <option key={invoice.invoice_id} value={invoice.invoice_id}>
-                        {invoice.invoice_number} - Due {formatCurrency(invoice.amount_due_paise)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="allocationAmountRupees">Allocate amount (INR)</Label>
-                  <Input
-                    id="allocationAmountRupees"
-                    name="allocationAmountRupees"
-                    type="number"
-                    step="0.01"
-                    defaultValue={selectedInvoices[0] ? selectedInvoices[0].amount_due_paise / 100 : ""}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="note">Note</Label>
-                <Input id="note" name="note" placeholder="Optional payment note" />
-              </div>
-              <Button type="submit">Record payment</Button>
-            </form>
+            <RecordPaymentForm 
+              memberships={data.memberships} 
+              invoices={data.invoices as any} 
+              initialMembershipId={selectedMembershipId} 
+              gymName={session.gym!.name}
+              upiVpa={session.gym!.upi_vpa}
+            />
           </CardContent>
         </Card>
 
