@@ -113,7 +113,7 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
           </div>
         </header>
 
-        <main className="mobile-safe flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="mobile-safe flex-1 px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:py-8">{children}</main>
 
         <nav className="mobile-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 py-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">

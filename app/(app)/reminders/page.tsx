@@ -1,7 +1,6 @@
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getReminderTemplates } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
-import { LockedGrowthCard } from "@/components/shared/locked-growth-card";
 import { WhatsappButton } from "@/components/shared/whatsapp-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,12 +25,11 @@ export default async function RemindersPage() {
     <div className="space-y-6">
       <PageHeader title="Reminders" description="Use manual WhatsApp on Basic and keep the upgrade path clear for automation." />
 
-      {!session.entitlements.automatedWhatsapp ? (
-        <LockedGrowthCard
-          title="Automated WhatsApp is locked"
-          body="Growth sends reminders automatically and keeps a delivery log. Basic still gives you one-tap messaging."
-        />
-      ) : null}
+      <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex gap-3 text-sm">
+        <div>
+          <strong className="text-accent">Pro Tip:</strong> You are on the Basic tier, so you can send WhatsApp messages manually by clicking below. Upgrade to Growth to automate this entirely!
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

@@ -5,7 +5,7 @@ export default function HelpPage() {
   const contactOptions = [
     { title: "WhatsApp Support", value: "+91 99999 99999", href: "https://wa.me/919999999999", icon: MessageSquare, description: "Fastest response for technical issues." },
     { title: "Email Support", value: "support@repcore.app", href: "mailto:support@repcore.app", icon: Mail, description: "For billing or account queries." },
-    { title: "Call Hub", value: "+91 80000 00000", href: "tel:+918000000000", icon: Phone, description: "Emergency assistance for your gym." },
+    { title: "Call Hub", value: "788854681", href: "tel:788854681", icon: Phone, description: "Emergency assistance for your gym." },
   ];
 
   return (
