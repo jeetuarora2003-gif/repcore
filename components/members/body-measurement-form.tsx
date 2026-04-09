@@ -23,8 +23,8 @@ export function BodyMeasurementForm({ membershipId }: Props) {
         await recordBodyMeasurementAction(membershipId, formData);
         setIsOpen(false);
         (e.target as HTMLFormElement).reset();
-      } catch (error: any) {
-        alert(error.message);
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : String(err));
       }
     });
   };
