@@ -71,8 +71,10 @@ export default async function SubscriptionPage() {
               </div>
               <div className="pt-4">
                 <p className="text-2xl font-bold">₹499 <span className="text-sm font-normal text-muted-foreground">/ month</span></p>
-                <Button className="mt-4 w-full h-12 rounded-2xl bg-white text-black hover:bg-white/90">
-                    Upgrade Now
+                <Button asChild className="mt-4 w-full h-12 rounded-2xl bg-white text-black hover:bg-white/90">
+                    <a href="upi://pay?pa=repcore@ybl&pn=RepCore%20Software&am=499.00&cu=INR&tn=Growth%20Tier%20Upgrade">
+                      Pay via UPI to Upgrade
+                    </a>
                 </Button>
               </div>
             </CardContent>

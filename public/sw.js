@@ -9,7 +9,7 @@ self.addEventListener("activate", (event) => {
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== "repcore-v1775721024922") {
+            if (cacheName !== "repcore-v1775725660074") {
               return caches.delete(cacheName);
             }
           })
@@ -32,7 +32,7 @@ self.addEventListener("fetch", (event) => {
         return cached || fetch(event.request).then((response) => {
           if (response.ok) {
             const clone = response.clone();
-            caches.open("repcore-v1775721024922").then((cache) => cache.put(event.request, clone));
+            caches.open("repcore-v1775725660074").then((cache) => cache.put(event.request, clone));
           }
           return response;
         });

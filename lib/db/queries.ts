@@ -400,7 +400,7 @@ export async function getMembersPageData(gymId: string, warningDays: number, sea
       !search ||
       record.members.full_name.toLowerCase().includes(search.toLowerCase()) ||
       record.members.phone.includes(search);
-    const matchesStatus = status === "all" || record.status === status;
+    const matchesStatus = status === "all" ? record.status !== "archived" : record.status === status;
 
     return matchesSearch && matchesStatus;
   });
