@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/shared/app-toaster";
 import { PwaRegister } from "@/components/shared/pwa-register";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -97,6 +98,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
+        <NextTopLoader color="#FF0000" showSpinner={false} shadow="0 0 10px #FF0000, 0 0 5px #FF0000" />
         <PwaRegister />
         {children}
         <Toaster />
