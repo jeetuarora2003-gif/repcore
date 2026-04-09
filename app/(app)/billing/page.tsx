@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { applyCreditAction, correctInvoiceAction, recordPaymentAction } from "@/lib/actions";
+import { applyCreditAction, correctInvoiceAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { getBillingPageData } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";

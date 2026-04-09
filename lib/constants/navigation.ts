@@ -1,14 +1,12 @@
 import {
-  BarChart3,
   BellRing,
   CreditCard,
+  HelpCircle,
   LayoutDashboard,
-  ListChecks,
   Settings,
   ShieldCheck,
   UserRound,
   UsersRound,
-  HelpCircle,
 } from "lucide-react";
 
 export const navigationItems = [

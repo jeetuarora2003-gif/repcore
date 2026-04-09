@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Banknote, CreditCard, Landmark, Loader2, QrCode, ReceiptText, Smartphone, X } from "lucide-react";
+import { Banknote, CreditCard, Landmark, Loader2, QrCode, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

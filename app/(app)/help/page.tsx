@@ -42,11 +42,11 @@ export default function HelpPage() {
         <CardContent className="space-y-4">
           <div className="panel-muted p-4 space-y-2">
             <h3 className="font-medium">How to record a new payment?</h3>
-            <p className="text-sm text-muted-foreground">Go to Billing, select the member, and tap "Collect via QR" or "Record Cash". The invoice is automatically balanced.</p>
+            <p className="text-sm text-muted-foreground">Go to Billing, select the member, and tap &quot;Collect via QR&quot; or &quot;Record Cash&quot;. The invoice is automatically balanced.</p>
           </div>
           <div className="panel-muted p-4 space-y-2">
             <h3 className="font-medium">Managing expiring memberships</h3>
-            <p className="text-sm text-muted-foreground">The Dashboard shows "Expiring this week". Tap the WhatsApp icon on their profile to send a one-click reminder.</p>
+            <p className="text-sm text-muted-foreground">The Dashboard shows &quot;Expiring this week&quot;. Tap the WhatsApp icon on their profile to send a one-click reminder.</p>
           </div>
         </CardContent>
       </Card>

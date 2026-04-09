@@ -346,14 +346,34 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 8);
 
+  const monthlyBreakdown: { month: string; revenue: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const ms = startOfMonth(d);
+    const me = endOfMonth(d);
+    const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
+    const rev = payments
+      .filter((p) => {
+        const r = toDate(p.received_on);
+        return !isBefore(r, ms) && !isAfter(r, me) && p.status === "recorded";
+      })
+      .reduce((sum, p) => sum + p.amount_paise, 0);
+    monthlyBreakdown.push({ month: label, revenue: rev });
+  }
+
   return {
     records,
     activeMembersCount,
     expiringThisWeek,
     pendingDueAmount,
     monthlyRevenue,
+    monthlyBreakdown,
     recentActivity,
-    memberships: ((membershipsResponse.data as MembershipLookupRow[] | null) ?? []).map(normalizeMembershipLookupRow),
+    memberships: memberships.map((m) => ({
+      id: m.id,
+      members: { full_name: m.members.full_name, phone: m.members.phone },
+    })),
   };
 }
 
@@ -413,7 +433,7 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
     payments: memberPayments,
     attendance: memberAttendance,
     messages: memberMessages,
-    bodyLogs: (bodyLogs.data as any[]) ?? [],
+    bodyLogs: (bodyLogs.data ?? []) as { id: string; recorded_on: string; weight_kg: number | null; body_fat_percentage: number | null; biceps_cm: number | null; waist_cm: number | null; chest_cm: number | null }[],
     status: deriveMembershipStatus(membership, memberSubscriptions, warningDays, freezes),
   };
 }
@@ -519,12 +539,16 @@ export async function getPublicMemberCardData(memberId: string) {
   const memberSubscriptions = (subscriptions.data as SubscriptionRecord[]) ?? [];
   const warnings = 7; // Default 7 days warning for public view
 
+  const members = data.members as { full_name: string; photo_url: string | null };
+  const gyms = data.gyms as { name: string; logo_url: string | null };
+  const membershipForStatus = data as unknown as MembershipRecord;
+
   return {
-    fullName: (data.members as any).full_name,
-    photoUrl: (data.members as any).photo_url,
-    status: deriveMembershipStatus(data as any, memberSubscriptions, warnings, (freezes.data as any) ?? []),
+    fullName: members.full_name,
+    photoUrl: members.photo_url,
+    status: deriveMembershipStatus(membershipForStatus, memberSubscriptions, warnings, (freezes.data as FreezeRecord[]) ?? []),
     expiresAt: getCurrentSubscription(memberSubscriptions)?.effective_end_date,
-    gymName: (data.gyms as any).name,
-    gymLogo: (data.gyms as any).logo_url,
+    gymName: gyms.name,
+    gymLogo: gyms.logo_url,
   };
 }

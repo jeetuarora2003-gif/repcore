@@ -93,7 +93,7 @@ export default async function DashboardPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Rapid Check-in</CardTitle>
-                    <p className="text-sm text-muted-foreground">Select a member to mark today's attendance.</p>
+                    <p className="text-sm text-muted-foreground">Select a member to mark today&apos;s attendance.</p>
                 </CardHeader>
                 <CardContent>
                     <form action={async (formData) => {

@@ -7,7 +7,7 @@ const LOG_FILE = path.join(process.cwd(), "master_admin_log.csv");
  * Appends a row to the master admin log.
  * Data is stored in CSV format which can be opened directly in Excel.
  */
-export function logAdminAction(event: "login" | "signup" | "onboarding", details: Record<string, any>) {
+export function logAdminAction(event: "login" | "signup" | "onboarding", details: Record<string, unknown>) {
   try {
     const timestamp = new Date().toISOString();
     const email = details.email || "";
