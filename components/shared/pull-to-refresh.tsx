@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-const PULL_THRESHOLD = 72; // px before triggering refresh
+const PULL_THRESHOLD = 60; // px before triggering refresh
 
 export function PullToRefresh() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export function PullToRefresh() {
 
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => {
-      if (window.scrollY === 0) {
+      if (window.scrollY <= 5) {
         startY.current = e.touches[0].clientY;
       }
     };
@@ -22,8 +22,8 @@ export function PullToRefresh() {
     const onTouchMove = (e: TouchEvent) => {
       if (startY.current === null) return;
       const delta = e.touches[0].clientY - startY.current;
-      if (delta > 0 && window.scrollY === 0) {
-        setPull(Math.min(delta * 0.5, PULL_THRESHOLD));
+      if (delta > 0 && window.scrollY <= 5) {
+        setPull(Math.min(delta * 0.85, PULL_THRESHOLD));
       }
     };
 
