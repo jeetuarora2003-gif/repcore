@@ -299,7 +299,9 @@ export async function getDashboardData(gymId: string, warningDays: number) {
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
 
-  const records = memberships.map((membership) => {
+  const records = memberships
+    .filter(m => m.archived_at === null)
+    .map((membership) => {
     const memberSubscriptions = subscriptions.filter((item) => item.membership_id === membership.id);
     const memberInvoices = invoiceBalances.filter((item) => item.membership_id === membership.id && item.derived_status !== "voided");
     return {

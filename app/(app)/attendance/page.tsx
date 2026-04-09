@@ -14,10 +14,11 @@ import { formatDate } from "@/lib/utils/format";
 export default async function AttendancePage({
   searchParams,
 }: {
-  searchParams: { date?: string; error?: string };
+  searchParams: Promise<{ date?: string; error?: string }>;
 }) {
   const session = await getSessionContext();
-  const selectedDate = searchParams.date ?? format(new Date(), "yyyy-MM-dd");
+  const searchParamsObj = await searchParams;
+  const selectedDate = searchParamsObj.date ?? format(new Date(), "yyyy-MM-dd");
   const data = await getAttendancePageData(session.gym!.id, selectedDate);
   const membershipLookup = new Map(data.memberships.map((membership) => [membership.id, membership]));
 
@@ -50,7 +51,7 @@ export default async function AttendancePage({
               <Label htmlFor="checkInDate">Date</Label>
               <Input id="checkInDate" name="checkInDate" type="date" defaultValue={selectedDate} required />
             </div>
-            {searchParams.error ? <p className="sm:col-span-3 text-sm text-danger">{searchParams.error}</p> : null}
+            {searchParamsObj.error ? <p className="sm:col-span-3 text-sm text-danger">{searchParamsObj.error}</p> : null}
             <div className="sm:col-span-3">
               <Button type="submit" className="w-full sm:w-auto">
                 Check in
