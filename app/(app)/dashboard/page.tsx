@@ -7,6 +7,8 @@ import { StatCard } from "@/components/shared/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { getSessionContext } from "@/lib/auth/session";
 import { getDashboardData } from "@/lib/db/queries";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
@@ -108,7 +110,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Rapid Check-in</CardTitle>
-              <p className="text-sm text-muted-foreground">Search a member to mark today&apos;s attendance.</p>
+              <p className="text-sm text-muted-foreground">Search a member and pick a date to mark attendance.</p>
             </CardHeader>
             <CardContent>
               <form action={markAttendanceAction} className="space-y-4">
@@ -119,7 +121,16 @@ export default async function DashboardPage() {
                     label: `${m.members.full_name} (${m.members.phone})`,
                   }))}
                 />
-                <input type="hidden" name="checkInDate" value={new Date().toISOString().slice(0, 10)} />
+                <div className="space-y-1">
+                  <Label htmlFor="dashCheckInDate" className="text-xs text-muted-foreground">Date</Label>
+                  <Input
+                    id="dashCheckInDate"
+                    name="checkInDate"
+                    type="date"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    className="h-10"
+                  />
+                </div>
                 <Button type="submit" className="w-full h-12 rounded-2xl bg-accent shadow-glow">
                   Log Entry
                 </Button>

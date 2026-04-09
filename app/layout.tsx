@@ -75,19 +75,19 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "RepCore",
-    "operatingSystem": "Android, iOS, Windows, macOS",
-    "applicationCategory": "BusinessApplication, HealthApplication",
-    "aggregateRating": {
+    name: "RepCore",
+    operatingSystem: "Android, iOS, Windows, macOS",
+    applicationCategory: "BusinessApplication, HealthApplication",
+    aggregateRating: {
       "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "120"
+      ratingValue: "4.9",
+      ratingCount: "120",
     },
-    "offers": {
+    offers: {
       "@type": "Offer",
-      "price": "0.00",
-      "priceCurrency": "INR"
-    }
+      price: "0.00",
+      priceCurrency: "INR",
+    },
   };
 
   return (
@@ -100,7 +100,8 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
-        <NextTopLoader color="#FF0000" showSpinner={false} shadow="0 0 10px #FF0000, 0 0 5px #FF0000" />
+        {/* Top loader uses accent CSS variable so it matches whatever theme the gym picks */}
+        <NextTopLoader color="var(--accent, #2563eb)" showSpinner={false} shadow="0 0 10px var(--accent, #2563eb), 0 0 5px var(--accent, #2563eb)" />
         <PwaRegister />
         {children}
         <Toaster />

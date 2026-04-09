@@ -13,16 +13,18 @@ type Plan = { id: string; name: string; duration_days: number };
 
 export function CreateMemberForm({ plans }: { plans: Plan[] }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const imageResetRef = useRef<(() => void) | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
       try {
         await createMembershipSaleAction(formData);
-        toast.success("Member added successfully!");
+        toast.success("Member enrolled successfully!");
         formRef.current?.reset();
-      } catch (error: Error | any) {
-        toast.error(error.message || "Failed to add member");
+        imageResetRef.current?.();
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Failed to enrol member");
       }
     });
   };
@@ -59,13 +61,13 @@ export function CreateMemberForm({ plans }: { plans: Plan[] }) {
         <Input id="startDate" name="startDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} disabled={isPending} />
       </div>
       <div className="sm:col-span-2 xl:col-span-1">
-        <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" />
+        <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" onResetRef={imageResetRef} />
       </div>
       <input type="hidden" name="saleReason" value="new_join" />
       <div className="sm:col-span-2 xl:col-span-4">
         <Button type="submit" disabled={isPending}>
           <UserPlus className="h-4 w-4" />
-          {isPending ? "Adding member..." : "Create member and first sale"}
+          {isPending ? "Enrolling..." : "Enrol Member"}
         </Button>
       </div>
     </form>
