@@ -69,11 +69,12 @@ export default async function MembersPage({
             <Card key={member.id}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-semibold">{member.members.full_name}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{member.members.phone}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-semibold truncate">{member.members.full_name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground truncate">{member.members.phone}</p>
                   </div>
                   <Badge
+                    className="flex-shrink-0"
                     variant={
                       member.status === "active"
                         ? "success"

@@ -23,11 +23,11 @@ function fmt(paise: number) {
 function ValueBoard({ monthlyRevenue, tier }: { monthlyRevenue: number; tier: string }) {
   return (
     <div className="rounded-2xl border border-green-500/20 bg-gradient-to-r from-green-500/10 to-transparent p-4 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-green-500/15 p-2.5 text-green-400">
+      <div className="flex items-start gap-3 min-w-0">
+        <div className="rounded-xl bg-green-500/15 p-2.5 text-green-400 flex-shrink-0 mt-0.5">
           <TrendingUp className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
             RepCore helped you collect <span className="text-green-400">{fmt(monthlyRevenue)}</span> this month
           </p>
@@ -52,11 +52,11 @@ function SleepingMembersAlert({ pendingDuesCount, expiringCount, onDismiss }: {
   return (
     <div className="rounded-2xl border border-orange-500/25 bg-gradient-to-r from-orange-500/10 to-transparent p-4">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 min-w-0">
           <div className="mt-0.5 rounded-xl bg-orange-500/15 p-2.5 text-orange-400 flex-shrink-0">
             <BellOff className="h-5 w-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold">
               {atRisk} member{atRisk !== 1 ? "s" : ""} at risk of dropping out
             </p>
@@ -65,7 +65,7 @@ function SleepingMembersAlert({ pendingDuesCount, expiringCount, onDismiss }: {
               {pendingDuesCount > 0 && `${pendingDuesCount} have unpaid dues. `}
               Growth users automate WhatsApp reminders and recover these members — on Basic, you need to do it manually.
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button asChild size="sm" className="h-8 rounded-xl text-xs">
                 <Link href="/reminders">Send reminders now</Link>
               </Button>
@@ -96,11 +96,11 @@ function MilestoneBanner({ count, tier, onDismiss }: {
   return (
     <div className="rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/10 to-transparent p-4">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 min-w-0">
           <div className="mt-0.5 rounded-xl bg-accent/15 p-2.5 text-accent flex-shrink-0">
             <Trophy className="h-5 w-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold">
               🎉 You just crossed {hit} active members!
             </p>

@@ -76,9 +76,9 @@ export default async function DashboardPage() {
               dashboard.expiringThisWeek.slice(0, 8).map((item) => (
                 <div key={item.id} className="rounded-2xl border border-border bg-white/[0.03] p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{item.members.full_name}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{item.members.phone}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{item.members.full_name}</p>
+                      <p className="mt-1 text-sm text-muted-foreground truncate">{item.members.phone}</p>
                     </div>
                     <Badge variant="warning">Expiring soon</Badge>
                   </div>
@@ -139,9 +139,9 @@ export default async function DashboardPage() {
                 <CardContent className="space-y-3">
                     {dashboard.recentActivity.map((activity) => (
                     <div key={`${activity.type}-${activity.id}`} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        <span className="text-xs text-muted-foreground">{formatDate(activity.created_at, "dd MMM, hh:mm a")}</span>
+                        <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-medium text-foreground mb-1 pr-2">{activity.title}</p>
+                            <span className="text-xs text-muted-foreground flex-shrink-0 mt-0.5">{formatDate(activity.created_at, "dd MMM, hh:mm a")}</span>
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">{activity.body}</p>
                     </div>

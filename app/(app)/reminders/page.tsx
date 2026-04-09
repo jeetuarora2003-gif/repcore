@@ -48,11 +48,11 @@ export default async function RemindersPage() {
             return (
               <div key={member.id} className="rounded-2xl border border-border bg-white/[0.03] p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{member.members.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{member.members.phone}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{member.members.full_name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{member.members.phone}</p>
                   </div>
-                  <Badge variant={member.status === "expiring_soon" ? "warning" : "danger"}>
+                  <Badge className="flex-shrink-0" variant={member.status === "expiring_soon" ? "warning" : "danger"}>
                     {member.status.replaceAll("_", " ")}
                   </Badge>
                 </div>
