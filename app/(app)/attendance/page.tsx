@@ -16,16 +16,18 @@ export default async function AttendancePage({
 }: {
   searchParams: { date?: string; error?: string };
 }) {
-  const session = await getSessionContext();
-  if (!session.gym) return null;
+  let data;
+  try {
+    const session = await getSessionContext();
+    if (!session.gym) return null;
 
-  const selectedDate = searchParams?.date ?? format(new Date(), "yyyy-MM-dd");
-  const data = await getAttendancePageData(session.gym.id, selectedDate);
-  const membershipLookup = new Map((data?.memberships ?? []).map((membership) => [membership.id, membership]));
+    const selectedDate = searchParams?.date ?? format(new Date(), "yyyy-MM-dd");
+    data = await getAttendancePageData(session.gym.id, selectedDate);
+    const membershipLookup = new Map((data?.memberships ?? []).map((membership) => [membership.id, membership]));
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Attendance" description="Manual check-in built for the front desk. One check-in per member per day." />
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Attendance" description="Manual check-in built for the front desk. One check-in per member per day." />
 
       <Card>
         <CardHeader>
@@ -73,7 +75,7 @@ export default async function AttendancePage({
 
               return (
                 <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
-                  <p className="text-sm font-medium">{membership?.members.full_name ?? entry.membership_id}</p>
+                  <p className="text-sm font-medium">{membership?.members?.full_name ?? entry.membership_id}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Checked in on {formatDate(entry.check_in_date)} at {formatDate(entry.checked_in_at, "hh:mm a")}
                   </p>
@@ -85,6 +87,17 @@ export default async function AttendancePage({
           )}
         </CardContent>
       </Card>
-    </div>
-  );
+      </div>
+    );
+  } catch (err: any) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-xl font-bold text-danger">Attendance Loading Failed</h1>
+        <p className="mt-2 text-muted-foreground">{err?.message || "Unknown error occurred"}</p>
+        <pre className="mt-4 overflow-auto rounded-xl bg-white/5 p-4 text-left text-xs text-muted-foreground">
+          {JSON.stringify(err, null, 2)}
+        </pre>
+      </div>
+    );
+  }
 }

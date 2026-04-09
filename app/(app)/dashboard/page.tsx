@@ -11,12 +11,16 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { ConversionBanners } from "@/components/shared/conversion-banners";
 
 export default async function DashboardPage() {
-  const session = await getSessionContext();
-  const dashboard = await getDashboardData(session.gym!.id, session.settings?.expiring_warning_days ?? 7);
+  let dashboard;
+  try {
+    const session = await getSessionContext();
+    if (!session.gym) return null;
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
+    dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
+
+    return (
+      <div className="space-y-6">
+        <PageHeader
         title="Dashboard"
         description="Your gym at a glance. Focus on renewals, collections, and today's floor activity."
         actions={
@@ -148,6 +152,17 @@ export default async function DashboardPage() {
             </Card>
         </div>
       </div>
-    </div>
-  );
+      </div>
+    );
+  } catch (err: any) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-xl font-bold text-danger">Dashboard Failed to Load</h1>
+        <p className="mt-2 text-muted-foreground">{err?.message || "Internal server error"}</p>
+        <pre className="mt-4 overflow-auto rounded-xl bg-white/5 p-4 text-left text-xs text-muted-foreground">
+          {JSON.stringify(err, null, 2)}
+        </pre>
+      </div>
+    );
+  }
 }
