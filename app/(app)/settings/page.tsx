@@ -17,11 +17,10 @@ import { ThemePicker } from "@/components/shared/theme-picker";
 
 export default async function SettingsPage() {
   const session = await getSessionContext();
-  if (session.gymUser?.role !== "owner") {
-    redirect("/dashboard");
-  }
+  if (!session.gym) redirect("/setup");
+  if (session.gymUser?.role !== "owner") redirect("/dashboard");
 
-  const data = await getSettingsPageData(session.gym!.id);
+  const data = await getSettingsPageData(session.gym.id);
 
   return (
     <div className="space-y-6">
@@ -35,27 +34,27 @@ export default async function SettingsPage() {
           <form action={updateGymProfileAction} className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Gym name</Label>
-              <Input id="name" name="name" defaultValue={session.gym?.name ?? ""} required />
+              <Input id="name" name="name" defaultValue={session.gym.name ?? ""} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" defaultValue={session.gym?.phone ?? ""} required />
+              <Input id="phone" name="phone" defaultValue={session.gym.phone ?? ""} required />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="address">Address</Label>
-              <Input id="address" name="address" defaultValue={session.gym?.address ?? ""} />
+              <Input id="address" name="address" defaultValue={session.gym.address ?? ""} />
             </div>
             <div className="space-y-4 sm:col-span-2">
               <ImageUpload 
                 bucket="gym_logos" 
                 name="logoUrl" 
                 label="Gym Logo" 
-                defaultValue={session.gym?.logo_url ?? ""} 
+                defaultValue={session.gym.logo_url ?? ""} 
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="gstNumber">GST number</Label>
-              <Input id="gstNumber" name="gstNumber" defaultValue={session.gym?.gst_number ?? ""} />
+              <Input id="gstNumber" name="gstNumber" defaultValue={session.gym.gst_number ?? ""} />
             </div>
             <div className="sm:col-span-2">
               <Button type="submit">Save profile</Button>
@@ -173,7 +172,7 @@ export default async function SettingsPage() {
             </div>
           </CardContent>
       </Card>
-      {/* App Theme */}
+
       <Card>
         <CardHeader>
           <CardTitle>App Theme</CardTitle>

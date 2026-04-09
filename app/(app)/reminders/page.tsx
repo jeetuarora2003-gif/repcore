@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getReminderTemplates } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
@@ -10,9 +11,11 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 
 export default async function RemindersPage() {
   const session = await getSessionContext();
+  if (!session.gym) redirect("/setup");
+
   const [members, templates] = await Promise.all([
-    getMembersPageData(session.gym!.id, session.settings?.expiring_warning_days ?? 7),
-    getReminderTemplates(session.gym!.id),
+    getMembersPageData(session.gym.id, session.settings?.expiring_warning_days ?? 7),
+    getReminderTemplates(session.gym.id),
   ]);
 
   const expiryTemplate =

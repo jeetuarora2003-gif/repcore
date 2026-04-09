@@ -34,17 +34,18 @@ type GymRecord = {
 
 export async function GET(
   _request: Request,
-  { params }: { params: { paymentId: string } },
+  { params }: { params: Promise<{ paymentId: string }> },
 ) {
+  const { paymentId } = await params;
   const supabase = createSupabaseServerClient();
 
-  const { data: payment } = await supabase.from("payments").select("*").eq("id", params.paymentId).single();
+  const { data: payment } = await supabase.from("payments").select("*").eq("id", paymentId).single();
   if (!payment) {
     return new NextResponse("Not found", { status: 404 });
   }
 
   const [{ data: receipt }, { data: membership }, { data: gym }] = await Promise.all([
-    supabase.from("receipts").select("receipt_number").eq("payment_id", params.paymentId).maybeSingle(),
+    supabase.from("receipts").select("receipt_number").eq("payment_id", paymentId).maybeSingle(),
     supabase
       .from("memberships")
       .select("id, members!inner(full_name, phone)")
@@ -113,7 +114,7 @@ export async function GET(
   return new NextResponse(body, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="receipt-${params.paymentId}.pdf"`,
+      "Content-Disposition": `inline; filename="receipt-${paymentId}.pdf"`,
     },
   });
 }

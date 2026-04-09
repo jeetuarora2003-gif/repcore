@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { upsertMembershipPlanAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembershipPlans } from "@/lib/db/queries";
@@ -11,7 +12,9 @@ import { formatCurrency } from "@/lib/utils/format";
 
 export default async function PlansPage() {
   const session = await getSessionContext();
-  const plans = await getMembershipPlans(session.gym!.id);
+  if (!session.gym) redirect("/setup");
+
+  const plans = await getMembershipPlans(session.gym.id);
 
   return (
     <div className="space-y-6">

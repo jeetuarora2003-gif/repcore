@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   freezeSubscriptionAction,
   renewSubscriptionAction,
@@ -27,13 +27,17 @@ import { QrCode, Share2 } from "lucide-react";
 export default async function MemberDetailPage({
   params,
 }: {
-  params: { memberId: string };
+  params: Promise<{ memberId: string }>;
 }) {
   const session = await getSessionContext();
+  if (!session.gym) redirect("/setup");
+
+  const { memberId } = await params;
+
   const [member, plans, templates] = await Promise.all([
-    getMemberDetailData(session.gym!.id, params.memberId, session.settings?.expiring_warning_days ?? 7),
-    getMembershipPlans(session.gym!.id),
-    getReminderTemplates(session.gym!.id),
+    getMemberDetailData(session.gym.id, memberId, session.settings?.expiring_warning_days ?? 7),
+    getMembershipPlans(session.gym.id),
+    getReminderTemplates(session.gym.id),
   ]);
 
   if (!member) notFound();
@@ -44,8 +48,8 @@ export default async function MemberDetailPage({
 
   const message = renderReminderTemplate(expiryTemplate, {
     name: member.members.full_name,
-    gymName: session.gym!.name,
-    phone: session.gym!.phone,
+    gymName: session.gym.name,
+    phone: session.gym.phone,
     date: member.currentSubscription?.effective_end_date,
   });
   const whatsappUrl = buildWhatsAppUrl(member.members.phone, message);
@@ -82,7 +86,6 @@ export default async function MemberDetailPage({
 
         <TabsContent value="overview" className="space-y-6 mt-6">
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            {/* Existing Profile Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Profile</CardTitle>
@@ -136,8 +139,8 @@ export default async function MemberDetailPage({
                                     photoUrl: member.members.photo_url,
                                     status: member.status,
                                     expiresAt: member.currentSubscription?.effective_end_date,
-                                    gymName: session.gym!.name,
-                                    gymLogo: session.gym!.logo_url
+                                    gymName: session.gym.name,
+                                    gymLogo: session.gym.logo_url
                                 }} 
                             />
                         </div>

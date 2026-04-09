@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { applyCreditAction, correctInvoiceAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { getBillingPageData } from "@/lib/db/queries";
@@ -14,12 +15,16 @@ import { RecordPaymentForm } from "@/components/billing/record-payment-form";
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: { membershipId?: string };
+  searchParams: Promise<{ membershipId?: string }>;
 }) {
   const session = await getSessionContext();
-  const data = await getBillingPageData(session.gym!.id);
+  if (!session.gym) redirect("/setup");
+
+  const { membershipId: membershipIdParam } = await searchParams;
+
+  const data = await getBillingPageData(session.gym.id);
   const membershipLookup = new Map(data.memberships.map((membership) => [membership.id, membership]));
-  const selectedMembershipId = searchParams.membershipId ?? data.memberships[0]?.id;
+  const selectedMembershipId = membershipIdParam ?? data.memberships[0]?.id;
   const openInvoices = data.invoices.filter((invoice) => invoice.derived_status !== "paid" && invoice.derived_status !== "voided");
   const selectedInvoices = openInvoices.filter((invoice) => invoice.membership_id === selectedMembershipId);
 
@@ -37,7 +42,7 @@ export default async function BillingPage({
               memberships={data.memberships} 
               invoices={data.invoices as any} 
               initialMembershipId={selectedMembershipId} 
-              gymName={session.gym!.name}
+              gymName={session.gym.name}
             />
           </CardContent>
         </Card>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, UserPlus, UsersRound } from "lucide-react";
+import { Search, UsersRound } from "lucide-react";
 import { CreateMemberForm } from "@/components/members/create-member-form";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getMembershipPlans } from "@/lib/db/queries";
@@ -8,20 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ImageUpload } from "@/components/shared/image-upload";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { redirect } from "next/navigation";
 
 export default async function MembersPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string };
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
   const session = await getSessionContext();
+  if (!session.gym) redirect("/setup");
+
+  const { q, status } = await searchParams;
+
   const [members, plans] = await Promise.all([
-    getMembersPageData(session.gym!.id, session.settings?.expiring_warning_days ?? 7, searchParams.q, searchParams.status),
-    getMembershipPlans(session.gym!.id),
+    getMembersPageData(session.gym.id, session.settings?.expiring_warning_days ?? 7, q, status),
+    getMembershipPlans(session.gym.id),
   ]);
 
   return (
@@ -42,11 +45,11 @@ export default async function MembersPage({
           <form className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-10" name="q" placeholder="Search by name or phone" defaultValue={searchParams.q ?? ""} />
+              <Input className="pl-10" name="q" placeholder="Search by name or phone" defaultValue={q ?? ""} />
             </div>
             <select
               name="status"
-              defaultValue={searchParams.status ?? "all"}
+              defaultValue={status ?? "all"}
               className="flex h-11 rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <option value="all">All statuses</option>

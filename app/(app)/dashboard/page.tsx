@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BellRing, CreditCard, Plus, UsersRound } from "lucide-react";
 import { markAttendanceAction } from "@/lib/actions";
 import { PageHeader } from "@/components/shared/page-header";
@@ -13,7 +14,9 @@ import { ConversionBanners } from "@/components/shared/conversion-banners";
 
 export default async function DashboardPage() {
   const session = await getSessionContext();
-  const dashboard = await getDashboardData(session.gym!.id, session.settings?.expiring_warning_days ?? 7);
+  if (!session.gym) redirect("/setup");
+
+  const dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
 
   return (
     <div className="space-y-6">
@@ -51,7 +54,6 @@ export default async function DashboardPage() {
         <StatCard label="Expiring this week" value={`${dashboard.expiringThisWeek.length}`} icon={BellRing} tone="warning" />
       </div>
 
-      {/* Conversion nudges — value proof + upgrade pressure */}
       <ConversionBanners
         tier={session.gymSubscription?.tier ?? "basic"}
         monthlyRevenue={dashboard.monthlyRevenue}
