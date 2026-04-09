@@ -25,7 +25,7 @@ export default async function SubscriptionPage() {
             <CardDescription>
               {isGrowth 
                 ? "You are using the full power of RepCore. (Rs. 499 / Month)" 
-                : "You are on the free-tier. Upgrade for pro features."}
+                : "You are on the Basic tier. (Rs. 299 / Month). Upgrade for automation features."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
