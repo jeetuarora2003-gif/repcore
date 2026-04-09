@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionContext } from "@/lib/auth/session";
 import { getDashboardData } from "@/lib/db/queries";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { ConversionBanners } from "@/components/shared/conversion-banners";
 
 export default async function DashboardPage() {
   const session = await getSessionContext();
@@ -48,6 +49,16 @@ export default async function DashboardPage() {
         <StatCard label="Pending dues" value={formatCurrency(dashboard.pendingDueAmount)} icon={BellRing} tone="danger" />
         <StatCard label="Expiring this week" value={`${dashboard.expiringThisWeek.length}`} icon={BellRing} tone="warning" />
       </div>
+
+      {/* Conversion nudges — value proof + upgrade pressure */}
+      <ConversionBanners
+        tier={session.gym?.tier ?? "basic"}
+        monthlyRevenue={dashboard.monthlyRevenue}
+        activeMembersCount={dashboard.activeMembersCount}
+        pendingDueAmount={dashboard.pendingDueAmount}
+        expiringCount={dashboard.expiringThisWeek.length}
+        pendingDuesCount={dashboard.pendingDueAmount > 0 ? Math.max(1, Math.round(dashboard.pendingDueAmount / 200000)) : 0}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card>
