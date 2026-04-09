@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node -e \"const fs = require('fs'); let sw = fs.readFileSync('public/sw.js', 'utf8'); sw = sw.replace(/repcore-v\\d+/g, 'repcore-v' + Date.now()); fs.writeFileSync('public/sw.js', sw);\" && next build",
     "start": "next start",
     "lint": "next lint"
   },
