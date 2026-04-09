@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/shared/app-toaster";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import NextTopLoader from "nextjs-toploader";
+import { ThemeInitScript } from "@/components/shared/theme-picker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -92,6 +93,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <ThemeInitScript />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { ThemePicker } from "@/components/shared/theme-picker";
 
 export default async function SettingsPage() {
   const session = await getSessionContext();
@@ -175,6 +176,16 @@ export default async function SettingsPage() {
               <Switch defaultChecked={session.gym?.tier === "growth"} />
             </div>
           </CardContent>
+      </Card>
+      {/* App Theme */}
+      <Card>
+        <CardHeader>
+          <CardTitle>App Theme</CardTitle>
+          <CardDescription>Personalise your RepCore accent colour. Applies instantly on this device.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemePicker />
+        </CardContent>
       </Card>
     </div>
   );
