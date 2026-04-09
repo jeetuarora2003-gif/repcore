@@ -466,7 +466,7 @@ export async function markAttendanceAction(formData: FormData) {
       recorded_by: session.user!.id,
     },
     {
-      onConflict: "membership_id,check_in_date",
+      onConflict: "attendance_logs_one_checkin_per_day_uniq",
       ignoreDuplicates: true,
     },
   );
