@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RepCore icon">
+  <rect width="512" height="512" rx="112" fill="#0A0A0A" />
+  <rect x="96" y="96" width="320" height="320" rx="88" fill="url(#g)" stroke="rgba(255,255,255,0.08)" />
+  <path d="M184 154h70c54 0 86 26 86 72 0 31-16 53-45 63l52 69h-55l-44-60h-18v60h-46V154Zm46 108h20c28 0 43-11 43-31 0-21-15-31-43-31h-20v62Z" fill="#F5F7FB"/>
+  <path d="M171 391V154h46v237z" fill="#2563EB"/>
+  <defs>
+    <linearGradient id="g" x1="256" y1="96" x2="256" y2="416" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#111111" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+</svg>
