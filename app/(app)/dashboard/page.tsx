@@ -107,16 +107,14 @@ export default async function DashboardPage() {
                     <p className="text-sm text-muted-foreground">Select a member to mark today&apos;s attendance.</p>
                 </CardHeader>
                 <CardContent>
-                    <form action={async (formData) => {
-                        "use server";
-                        await markAttendanceAction(formData);
-                    }} className="space-y-4">
+                    <form action={markAttendanceAction} className="space-y-4">
                         <select
                             name="membershipId"
                             required
-                            className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-base text-foreground focus:ring-2 focus:ring-accent"
+                            defaultValue=""
+                            className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
-                            <option value="" disabled selected>Search member...</option>
+                            <option value="" disabled>Search member...</option>
                             {dashboard.memberships.map((m) => (
                                 <option key={m.id} value={m.id}>
                                     {m.members.full_name} ({m.members.phone})
