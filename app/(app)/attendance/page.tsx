@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { redirect } from "next/navigation";
 import { UserRoundCheck } from "lucide-react";
 import { markAttendanceAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
@@ -10,16 +11,19 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@/lib/utils/format";
+import { MemberSearchSelect } from "@/components/shared/member-search-select";
 
 export default async function AttendancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; error?: string }>;
+  searchParams: Promise<{ date?: string; error?: string; success?: string }>;
 }) {
   const session = await getSessionContext();
+  if (!session.gym) redirect("/setup");
+
   const searchParamsObj = await searchParams;
   const selectedDate = searchParamsObj.date ?? format(new Date(), "yyyy-MM-dd");
-  const data = await getAttendancePageData(session.gym!.id, selectedDate);
+  const data = await getAttendancePageData(session.gym.id, selectedDate);
   const membershipLookup = new Map(data.memberships.map((membership) => [membership.id, membership]));
 
   return (
@@ -34,24 +38,24 @@ export default async function AttendancePage({
           <form action={markAttendanceAction} className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="attendanceMembershipId">Membership</Label>
-              <select
-                id="attendanceMembershipId"
+              <MemberSearchSelect
                 name="membershipId"
-                required
-                className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                {data.memberships.map((membership) => (
-                  <option key={membership.id} value={membership.id}>
-                    {membership.members.full_name} ({membership.members.phone})
-                  </option>
-                ))}
-              </select>
+                memberships={data.memberships.map((m) => ({
+                  id: m.id,
+                  label: `${m.members.full_name} (${m.members.phone})`,
+                }))}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="checkInDate">Date</Label>
               <Input id="checkInDate" name="checkInDate" type="date" defaultValue={selectedDate} required />
             </div>
-            {searchParamsObj.error ? <p className="sm:col-span-3 text-sm text-danger">{searchParamsObj.error}</p> : null}
+            {searchParamsObj.error ? (
+              <p className="sm:col-span-3 text-sm text-danger">{searchParamsObj.error}</p>
+            ) : null}
+            {searchParamsObj.success ? (
+              <p className="sm:col-span-3 text-sm text-green-400">✓ Check-in recorded successfully.</p>
+            ) : null}
             <div className="sm:col-span-3">
               <Button type="submit" className="w-full sm:w-auto">
                 Check in
@@ -69,7 +73,6 @@ export default async function AttendancePage({
           {data.attendance.length ? (
             data.attendance.map((entry) => {
               const membership = membershipLookup.get(entry.membership_id);
-
               return (
                 <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
                   <p className="text-sm font-medium">{membership?.members.full_name ?? entry.membership_id}</p>

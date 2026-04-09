@@ -188,6 +188,7 @@ export async function upsertMembershipPlanAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/plans");
   revalidatePath("/settings");
+  redirect("/plans?success=Plan+saved+successfully");
 }
 
 export async function updateMemberProfileAction(formData: FormData) {
@@ -217,6 +218,7 @@ export async function updateMemberProfileAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/members");
   revalidatePath(`/members/${values.memberId}`);
+  redirect(`/members/${values.memberId}?success=Profile+updated`);
 }
 
 export async function archiveMembershipAction(formData: FormData) {
@@ -224,22 +226,6 @@ export async function archiveMembershipAction(formData: FormData) {
   const supabase = createSupabaseServerClient();
   const membershipId = asString(formData.get("membershipId"));
   const archiveReason = asString(formData.get("archiveReason"));
-
-  const { data: liveSubscription } = await supabase
-    .from("v_subscription_effective_dates")
-    .select("subscription_id, effective_end_date, status")
-    .eq("gym_id", session.gym!.id)
-    .eq("membership_id", membershipId)
-    .in("status", ["active", "frozen"])
-    .order("effective_end_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Allow archiving even with live subscriptions to support mistake correction
-  // Historical records will still be preserved in v_subscription_effective_dates
-  // if (liveSubscription) {
-  //   throw new Error("Archive the membership only after the live subscription is finished.");
-  // }
 
   const { error } = await supabase
     .from("memberships")
@@ -252,6 +238,7 @@ export async function archiveMembershipAction(formData: FormData) {
 
   assertSupabaseSuccess(error);
   revalidatePath("/members");
+  redirect("/members?success=Member+archived");
 }
 
 export async function createMembershipSaleAction(formData: FormData) {
@@ -284,6 +271,7 @@ export async function createMembershipSaleAction(formData: FormData) {
   revalidatePath("/members");
   revalidatePath("/subscriptions");
   revalidatePath("/dashboard");
+  redirect("/members?success=Member+added+successfully");
 }
 
 export async function renewSubscriptionAction(formData: FormData) {
@@ -308,6 +296,7 @@ export async function renewSubscriptionAction(formData: FormData) {
   revalidatePath("/subscriptions");
   revalidatePath("/members");
   revalidatePath("/dashboard");
+  redirect(`/members/${values.membershipId}?success=Subscription+renewed`);
 }
 
 export async function freezeSubscriptionAction(formData: FormData) {
@@ -331,6 +320,7 @@ export async function freezeSubscriptionAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/subscriptions");
   revalidatePath("/members");
+  redirect("/subscriptions?success=Subscription+frozen");
 }
 
 export async function recordPaymentAction(formData: FormData) {
@@ -342,12 +332,7 @@ export async function recordPaymentAction(formData: FormData) {
 
   const fallbackAllocations =
     allocationInvoiceId
-      ? [
-          {
-            invoiceId: allocationInvoiceId,
-            amountRupees: allocationAmountRupees || asString(formData.get("amountRupees")),
-          },
-        ]
+      ? [{ invoiceId: allocationInvoiceId, amountRupees: allocationAmountRupees || asString(formData.get("amountRupees")) }]
       : [];
 
   const values = recordPaymentSchema.parse({
@@ -378,6 +363,7 @@ export async function recordPaymentAction(formData: FormData) {
   revalidatePath("/billing");
   revalidatePath("/dashboard");
   revalidatePath("/members");
+  redirect("/billing?success=Payment+recorded");
 }
 
 export async function applyCreditAction(formData: FormData) {
@@ -401,6 +387,7 @@ export async function applyCreditAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/billing");
   revalidatePath("/members");
+  redirect("/billing?success=Credit+applied");
 }
 
 export async function correctInvoiceAction(formData: FormData) {
@@ -424,6 +411,7 @@ export async function correctInvoiceAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/billing");
   revalidatePath("/members");
+  redirect("/billing?success=Invoice+corrected");
 }
 
 export async function markAttendanceAction(formData: FormData) {
@@ -470,6 +458,7 @@ export async function markAttendanceAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/attendance");
   revalidatePath("/dashboard");
+  redirect(`/attendance?date=${encodeURIComponent(values.checkInDate)}&success=Check-in+recorded`);
 }
 
 export async function updateGymProfileAction(formData: FormData) {
@@ -497,6 +486,7 @@ export async function updateGymProfileAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+  redirect("/settings?success=Profile+saved");
 }
 
 export async function updateGymSettingsAction(formData: FormData) {
@@ -522,6 +512,7 @@ export async function updateGymSettingsAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+  redirect("/settings?success=Settings+saved");
 }
 
 export async function updateReminderTemplateAction(formData: FormData) {
@@ -545,6 +536,7 @@ export async function updateReminderTemplateAction(formData: FormData) {
   assertSupabaseSuccess(error);
   revalidatePath("/settings");
   revalidatePath("/reminders");
+  redirect("/settings?success=Template+saved");
 }
 
 export async function logManualReminderAction(payload: {

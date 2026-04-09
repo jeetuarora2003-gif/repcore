@@ -22,9 +22,16 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
+// Bottom nav shows: Dashboard, Members, Billing, Attendance — the 4 most used pages on mobile
+const BOTTOM_NAV_HREFS = ["/dashboard", "/members", "/billing", "/attendance"];
+
 export function AppShell({ gymName, role, tier, userEmail, children }: AppShellProps) {
   const pathname = usePathname();
   const navItems = navigationItems.filter((item) => !(role !== "owner" && item.href === "/settings"));
+  const bottomNavItems = navItems.filter((item) => BOTTOM_NAV_HREFS.includes(item.href));
+
+  // Avatar: use first 2 chars of the name part before @
+  const avatarText = (userEmail.split("@")[0] ?? userEmail).slice(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
@@ -119,7 +126,7 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
                   <p className="text-xs text-muted-foreground">Signed in</p>
                 </div>
                 <Avatar className="h-11 w-11 border border-border group-hover:border-accent/40 shadow-sm transition-all text-sm font-medium">
-                  <AvatarFallback>{userEmail.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{avatarText}</AvatarFallback>
                 </Avatar>
               </Link>
             </div>
@@ -128,12 +135,11 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
 
         <main className="mobile-safe flex-1 px-4 py-5 pb-32 sm:px-6 lg:px-8 lg:py-8">{children}</main>
 
-        {/* Pull-to-refresh (mobile only) */}
         <PullToRefresh />
 
-        {/* FAB — quick add member */}
+        {/* FAB — jumps straight to the Add Member form */}
         <Link
-          href="/members"
+          href="/members#fullName"
           className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_4px_20px_rgba(0,0,0,0.4)] active:scale-90 transition-all duration-200 lg:hidden"
           style={{ boxShadow: "0 4px 20px var(--accent, #2563eb)55" }}
           aria-label="Add member"
@@ -141,9 +147,10 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
           <Plus className="h-6 w-6" />
         </Link>
 
+        {/* Bottom nav — fixed 4 most-used pages */}
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">
-            {navItems.slice(0, 4).map((item) => {
+            {bottomNavItems.map((item) => {
               const active = pathname.startsWith(item.href);
               return (
                 <Link

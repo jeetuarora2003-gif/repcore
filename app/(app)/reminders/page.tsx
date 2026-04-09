@@ -23,16 +23,19 @@ export default async function RemindersPage() {
     "Hi [Name], your membership at [Gym Name] expires on [Date]. Please renew to continue. Contact: [Phone]";
 
   const dueMembers = members.filter((member) => member.duePaise > 0 || member.status === "expiring_soon");
+  const isGrowth = session.gymSubscription?.tier === "growth";
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reminders" description="Use manual WhatsApp on Basic and keep the upgrade path clear for automation." />
+      <PageHeader title="Reminders" description="Send WhatsApp reminders to members who are expiring or have dues." />
 
-      <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex gap-3 text-sm">
-        <div>
-          <strong className="text-accent">Pro Tip:</strong> You are on the Basic tier, so you can send WhatsApp messages manually by clicking below. Upgrade to Growth to automate this entirely!
+      {!isGrowth && (
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex gap-3 text-sm">
+          <div>
+            <strong className="text-accent">Pro Tip:</strong> You are on the Basic plan — send WhatsApp messages manually below. Upgrade to Growth to automate this entirely!
+          </div>
         </div>
-      </div>
+      )}
 
       <Card>
         <CardHeader>
