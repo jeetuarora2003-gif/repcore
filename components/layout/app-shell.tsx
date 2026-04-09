@@ -113,9 +113,9 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
           </div>
         </header>
 
-        <main className="mobile-safe flex-1 px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="mobile-safe flex-1 px-4 py-5 pb-32 sm:px-6 lg:px-8 lg:py-8">{children}</main>
 
-        <nav className="mobile-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 py-2 backdrop-blur-lg lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">
             {navItems.slice(0, 4).map((item) => {
               const active = pathname.startsWith(item.href);
@@ -124,8 +124,8 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition",
-                    active ? "bg-accent/15 text-accent" : "text-muted-foreground",
+                    "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition-all duration-200 active:scale-90",
+                    active ? "bg-accent/15 text-accent active:bg-accent/25" : "text-muted-foreground active:bg-white/5",
                   )}
                 >
                   <item.icon className="h-4 w-4" />
