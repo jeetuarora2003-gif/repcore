@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/shared/image-upload";
-import { BodyMeasurementForm } from "@/components/members/body-measurement-form";
 import { DigitalIdCard } from "@/components/members/digital-id-card";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { renderReminderTemplate } from "@/lib/utils/reminders";
@@ -78,7 +77,7 @@ export default async function MemberDetailPage({
         <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/[0.03] p-1 h-12">
           <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Overview</TabsTrigger>
           <TabsTrigger value="billing" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Billing</TabsTrigger>
-          <TabsTrigger value="progress" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Progress</TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
@@ -98,20 +97,6 @@ export default async function MemberDetailPage({
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
                     <Input id="phone" name="phone" defaultValue={member.members.phone} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
-                    <select
-                      id="gender"
-                      name="gender"
-                      defaultValue={member.members.gender ?? ""}
-                      className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
                   </div>
                   <div className="sm:col-span-2">
                     <ImageUpload 
@@ -253,46 +238,51 @@ export default async function MemberDetailPage({
             </div>
         </TabsContent>
 
-        <TabsContent value="progress" className="space-y-6 mt-6">
+        <TabsContent value="activity" className="space-y-6 mt-6">
+          <div className="grid gap-6 xl:grid-cols-2">
             <Card>
-                <CardHeader>
-                    <CardTitle>Fitness Journey</CardTitle>
-                    <p className="text-sm text-muted-foreground">Log and track body measurements over time.</p>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                    <BodyMeasurementForm membershipId={member.id} />
-                    
-                    {member.bodyLogs.length > 0 && (
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Progress</h3>
-                            <div className="overflow-x-auto rounded-3xl border border-border">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-white/[0.03] text-muted-foreground font-medium">
-                                        <tr>
-                                            <th className="px-4 py-3">Date</th>
-                                            <th className="px-4 py-3">Weight</th>
-                                            <th className="px-4 py-3">Fat %</th>
-                                            <th className="px-4 py-3">Biceps</th>
-                                            <th className="px-4 py-3">Waist</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50">
-                                        {member.bodyLogs.map((log) => (
-                                            <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                                                <td className="px-4 py-4 font-medium">{formatDate(log.recorded_on)}</td>
-                                                <td className="px-4 py-4">{log.weight_kg ?? "-"} kg</td>
-                                                <td className="px-4 py-4">{log.body_fat_percentage ?? "-"} %</td>
-                                                <td className="px-4 py-4">{log.biceps_cm ?? "-"} cm</td>
-                                                <td className="px-4 py-4">{log.waist_cm ?? "-"} cm</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
+              <CardHeader>
+                <CardTitle>Attendance history</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {member.attendance.length ? (
+                  member.attendance.map((entry) => (
+                    <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                      <p className="font-medium">{formatDate(entry.check_in_date)}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Checked in at {formatDate(entry.checked_in_at, "hh:mm a")}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm text-muted-foreground">
+                    No attendance logged for this member yet.
+                  </div>
+                )}
+              </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Reminder history</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {member.messages.length ? (
+                  member.messages.map((messageLog) => (
+                    <div key={messageLog.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                      <p className="font-medium">{messageLog.channel.replaceAll("_", " ")}</p>
+                      <p className="mt-1 text-muted-foreground">{formatDate(messageLog.created_at, "dd MMM, hh:mm a")}</p>
+                      <p className="mt-3 line-clamp-3 text-foreground/90">{messageLog.rendered_body}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm text-muted-foreground">
+                    No reminder history recorded yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

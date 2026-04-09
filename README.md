@@ -63,6 +63,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
 
+Use the `Project URL` and `anon/public` key from the same Supabase project.
+Do not paste the service role key into `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
 ### 3. Run database migrations
 
 Apply the Supabase SQL files in order:
@@ -84,6 +87,24 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run lint
 npm run build
 ```
+
+## Troubleshooting
+
+### "Invalid API key" on sign up or sign in
+
+This usually means the local Supabase credentials do not belong to the same project, or the anon/public key was copied incorrectly.
+
+Check these values in `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Then make sure:
+
+- the URL and anon/public key come from the same Supabase project
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is the public anon key, not the service role key
+- the dev server is restarted after changing env vars
 
 ## Important Architecture Notes
 

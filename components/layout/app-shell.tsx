@@ -39,7 +39,7 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
 
         <nav className="mt-6 space-y-1">
           {navItems.map((item) => {
-            const active = item.href === "/settings" ? pathname === "/settings" : pathname.startsWith(item.href);
+            const active = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}

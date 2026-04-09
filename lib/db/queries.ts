@@ -400,7 +400,7 @@ export async function getMembersPageData(gymId: string, warningDays: number, sea
       !search ||
       record.members.full_name.toLowerCase().includes(search.toLowerCase()) ||
       record.members.phone.includes(search);
-    const matchesStatus = status === "all" ? record.status !== "archived" : record.status === status;
+    const matchesStatus = status === "all" || record.status === status;
 
     return matchesSearch && matchesStatus;
   });
@@ -420,13 +420,6 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
   const memberAttendance = attendanceLogs.filter((item) => item.membership_id === membership.id);
   const memberMessages = messageLogs.filter((item) => item.membership_id === membership.id);
 
-  const supabase = createSupabaseServerClient();
-  const bodyLogs = await supabase
-    .from("member_body_logs")
-    .select("*")
-    .eq("membership_id", membership.id)
-    .order("recorded_on", { ascending: false });
-
   return {
     ...membership,
     currentSubscription: getCurrentSubscription(memberSubscriptions),
@@ -435,7 +428,6 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
     payments: memberPayments,
     attendance: memberAttendance,
     messages: memberMessages,
-    bodyLogs: (bodyLogs.data ?? []) as { id: string; recorded_on: string; weight_kg: number | null; body_fat_percentage: number | null; biceps_cm: number | null; waist_cm: number | null; chest_cm: number | null }[],
     status: deriveMembershipStatus(membership, memberSubscriptions, warningDays, freezes),
   };
 }
@@ -541,9 +533,11 @@ export async function getPublicMemberCardData(memberId: string) {
   const memberSubscriptions = (subscriptions.data as SubscriptionRecord[]) ?? [];
   const warnings = 7; // Default 7 days warning for public view
 
-  const members = data.members as { full_name: string; photo_url: string | null };
-  const gyms = data.gyms as { name: string; logo_url: string | null };
+  const members = Array.isArray(data.members) ? data.members[0] : data.members;
+  const gyms = Array.isArray(data.gyms) ? data.gyms[0] : data.gyms;
   const membershipForStatus = data as unknown as MembershipRecord;
+
+  if (!members || !gyms) return null;
 
   return {
     fullName: members.full_name,

@@ -43,7 +43,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
       .from("gyms")
       .select("id, organization_id, name, phone, address, logo_url, gst_number, timezone")
       .eq("id", gymUser.gym_id)
-      .maybeSingle(),
+      .single(),
     supabase
       .from("gym_settings")
       .select("gym_id, expiring_warning_days, renewal_mode, freeze_blocks_checkin, gst_enabled, receipt_prefix, invoice_prefix")
@@ -51,7 +51,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
       .maybeSingle(),
     supabase
       .from("gym_subscriptions")
-      .select("id, tier, status, current_period_end")
+      .select("id, tier, status")
       .eq("gym_id", gymUser.gym_id)
       .maybeSingle(),
   ]);
@@ -61,7 +61,6 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
         id: subscriptionResponse.data.id as string,
         tier: (subscriptionResponse.data.tier as "basic" | "growth") ?? "basic",
         status: subscriptionResponse.data.status as string,
-        current_period_end: subscriptionResponse.data.current_period_end as string | null,
       }
     : null;
 

@@ -14,14 +14,13 @@ import { formatDate } from "@/lib/utils/format";
 export default async function AttendancePage({
   searchParams,
 }: {
-  searchParams: { date?: string; error?: string };
+  searchParams: Promise<{ date?: string; error?: string }>;
 }) {
   const session = await getSessionContext();
-  if (!session.gym) return null;
-
-  const selectedDate = searchParams?.date ?? format(new Date(), "yyyy-MM-dd");
-  const data = await getAttendancePageData(session.gym.id, selectedDate);
-  const membershipLookup = new Map((data?.memberships ?? []).map((membership) => [membership.id, membership]));
+  const searchParamsObj = await searchParams;
+  const selectedDate = searchParamsObj.date ?? format(new Date(), "yyyy-MM-dd");
+  const data = await getAttendancePageData(session.gym!.id, selectedDate);
+  const membershipLookup = new Map(data.memberships.map((membership) => [membership.id, membership]));
 
   return (
     <div className="space-y-6">
@@ -52,7 +51,7 @@ export default async function AttendancePage({
               <Label htmlFor="checkInDate">Date</Label>
               <Input id="checkInDate" name="checkInDate" type="date" defaultValue={selectedDate} required />
             </div>
-            {searchParams?.error ? <p className="sm:col-span-3 text-sm text-danger">{searchParams.error}</p> : null}
+            {searchParamsObj.error ? <p className="sm:col-span-3 text-sm text-danger">{searchParamsObj.error}</p> : null}
             <div className="sm:col-span-3">
               <Button type="submit" className="w-full sm:w-auto">
                 Check in
@@ -73,7 +72,7 @@ export default async function AttendancePage({
 
               return (
                 <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] px-4 py-3">
-                  <p className="text-sm font-medium">{membership?.members?.full_name ?? entry.membership_id}</p>
+                  <p className="text-sm font-medium">{membership?.members.full_name ?? entry.membership_id}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Checked in on {formatDate(entry.check_in_date)} at {formatDate(entry.checked_in_at, "hh:mm a")}
                   </p>

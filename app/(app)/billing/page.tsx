@@ -38,7 +38,6 @@ export default async function BillingPage({
               invoices={data.invoices as any} 
               initialMembershipId={selectedMembershipId} 
               gymName={session.gym!.name}
-              upiVpa={session.gym!.upi_vpa}
             />
           </CardContent>
         </Card>

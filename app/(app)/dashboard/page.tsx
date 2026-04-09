@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BellRing, CreditCard, Plus, UsersRound } from "lucide-react";
+import { markAttendanceAction } from "@/lib/actions";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +13,7 @@ import { ConversionBanners } from "@/components/shared/conversion-banners";
 
 export default async function DashboardPage() {
   const session = await getSessionContext();
-  if (!session.gym || !session.gymSubscription) return null;
-
-  const dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
+  const dashboard = await getDashboardData(session.gym!.id, session.settings?.expiring_warning_days ?? 7);
 
   return (
     <div className="space-y-6">
@@ -54,7 +53,7 @@ export default async function DashboardPage() {
 
       {/* Conversion nudges — value proof + upgrade pressure */}
       <ConversionBanners
-        tier={session.gymSubscription.tier}
+        tier={session.gymSubscription?.tier ?? "basic"}
         monthlyRevenue={dashboard.monthlyRevenue}
         activeMembersCount={dashboard.activeMembersCount}
         pendingDueAmount={dashboard.pendingDueAmount}
@@ -109,14 +108,16 @@ export default async function DashboardPage() {
                     <p className="text-sm text-muted-foreground">Select a member to mark today&apos;s attendance.</p>
                 </CardHeader>
                 <CardContent>
-                    <form action={markAttendanceAction} className="space-y-4">
+                    <form action={async (formData) => {
+                        "use server";
+                        await markAttendanceAction(formData);
+                    }} className="space-y-4">
                         <select
                             name="membershipId"
                             required
-                            defaultValue=""
-                            className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-base text-foreground focus:ring-2 focus:ring-accent"
                         >
-                            <option value="" disabled>Search member...</option>
+                            <option value="" disabled selected>Search member...</option>
                             {dashboard.memberships.map((m) => (
                                 <option key={m.id} value={m.id}>
                                     {m.members.full_name} ({m.members.phone})

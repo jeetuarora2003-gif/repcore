@@ -35,7 +35,6 @@ export const memberProfileSchema = z.object({
   fullName: z.string().min(2),
   phone: z.string().min(8),
   photoUrl: z.string().url().optional().or(z.literal("")),
-  gender: z.enum(["male", "female", "other"]).optional().or(z.literal("")),
   notes: z.string().optional().default(""),
 });
 
@@ -99,17 +98,7 @@ export const gymProfileSchema = z.object({
   phone: z.string().min(8),
   address: z.string().optional().default(""),
   logoUrl: z.string().url().optional().or(z.literal("")),
-  upiVpa: z.string().optional().or(z.literal("")),
   gstNumber: z.string().optional().default(""),
-});
-
-export const bodyMeasurementSchema = z.object({
-  weightKg: z.coerce.number().optional(),
-  bodyFatPercentage: z.coerce.number().optional(),
-  waistCm: z.coerce.number().optional(),
-  chestCm: z.coerce.number().optional(),
-  bicepsCm: z.coerce.number().optional(),
-  recordedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
 export const gymSettingsSchema = z.object({

@@ -54,10 +54,6 @@ export default async function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="upiVpa">UPI ID (for dynamic QR)</Label>
-              <Input id="upiVpa" name="upiVpa" placeholder="merchant@okupi" defaultValue={session.gym?.upi_vpa ?? ""} />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="gstNumber">GST number</Label>
               <Input id="gstNumber" name="gstNumber" defaultValue={session.gym?.gst_number ?? ""} />
             </div>
@@ -163,7 +159,7 @@ export default async function SettingsPage() {
                 <p className="text-xs text-muted-foreground">Get alerted even when the app is closed.</p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[10px] uppercase">Coming Soon</Badge>
+                <Badge variant="default" className="text-[10px] uppercase">Coming Soon</Badge>
                 <Switch disabled />
               </div>
             </div>
@@ -173,7 +169,7 @@ export default async function SettingsPage() {
                 <Label>Daily Attendance Report</Label>
                 <p className="text-xs text-muted-foreground">Receive a WhatsApp summary at 10 PM.</p>
               </div>
-              <Switch defaultChecked={session.gym?.tier === "growth"} />
+              <Switch defaultChecked={session.gymSubscription?.tier === "growth"} />
             </div>
           </CardContent>
       </Card>

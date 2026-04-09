@@ -4,33 +4,50 @@ import { useEffect } from "react";
 
 export function PwaRegister() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").then((registration) => {
-        // 1. Manual check for update when app is opened
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+        .catch(() => undefined);
+
+      if ("caches" in window) {
+        caches
+          .keys()
+          .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
+          .catch(() => undefined);
+      }
+
+      return;
+    }
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
         registration.update();
 
-        // 2. Add listener for new SW version
         registration.onupdatefound = () => {
           const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.onstatechange = () => {
-              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                // New content is available and will be used after reload
-                window.location.reload();
-              }
-            };
-          }
-        };
-      }).catch(() => undefined);
+          if (!newWorker) return;
 
-      // 3. Handle controller change (safety net)
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
-    }
+          newWorker.onstatechange = () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              window.location.reload();
+            }
+          };
+        };
+      })
+      .catch(() => undefined);
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   }, []);
 
   return null;

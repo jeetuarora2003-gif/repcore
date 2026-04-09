@@ -89,7 +89,7 @@ export function ThemePicker() {
                 style={{
                   background: theme.accent,
                   boxShadow: `0 0 12px ${theme.accent}60`,
-                  ringColor: isActive ? "white" : "transparent",
+                  border: `2px solid ${isActive ? "white" : "transparent"}`,
                   outline: isActive ? "2px solid white" : "2px solid transparent",
                   outlineOffset: "2px",
                 }}

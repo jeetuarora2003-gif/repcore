@@ -13,7 +13,7 @@ export default async function SetupPage({
 }) {
   const session = await getSessionContext();
   if (!session.user) redirect("/login");
-  if (session.gym && session.gymSubscription) redirect("/dashboard");
+  if (session.gym) redirect("/dashboard");
 
   return (
     <main className="min-h-screen bg-hero-grid bg-hero-grid px-5 py-8">
