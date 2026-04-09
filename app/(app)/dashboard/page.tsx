@@ -11,16 +11,14 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { ConversionBanners } from "@/components/shared/conversion-banners";
 
 export default async function DashboardPage() {
-  let dashboard;
-  try {
-    const session = await getSessionContext();
-    if (!session.gym) return null;
+  const session = await getSessionContext();
+  if (!session.gym || !session.gymSubscription) return null;
 
-    dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
+  const dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
 
-    return (
-      <div className="space-y-6">
-        <PageHeader
+  return (
+    <div className="space-y-6">
+      <PageHeader
         title="Dashboard"
         description="Your gym at a glance. Focus on renewals, collections, and today's floor activity."
         actions={
@@ -56,7 +54,7 @@ export default async function DashboardPage() {
 
       {/* Conversion nudges — value proof + upgrade pressure */}
       <ConversionBanners
-        tier={session.gym?.tier ?? "basic"}
+        tier={session.gymSubscription.tier}
         monthlyRevenue={dashboard.monthlyRevenue}
         activeMembersCount={dashboard.activeMembersCount}
         pendingDueAmount={dashboard.pendingDueAmount}
@@ -152,17 +150,6 @@ export default async function DashboardPage() {
             </Card>
         </div>
       </div>
-      </div>
-    );
-  } catch (err: any) {
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-xl font-bold text-danger">Dashboard Failed to Load</h1>
-        <p className="mt-2 text-muted-foreground">{err?.message || "Internal server error"}</p>
-        <pre className="mt-4 overflow-auto rounded-xl bg-white/5 p-4 text-left text-xs text-muted-foreground">
-          {JSON.stringify(err, null, 2)}
-        </pre>
-      </div>
-    );
-  }
+    </div>
+  );
 }

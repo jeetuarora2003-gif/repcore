@@ -16,18 +16,16 @@ export default async function AttendancePage({
 }: {
   searchParams: { date?: string; error?: string };
 }) {
-  let data;
-  try {
-    const session = await getSessionContext();
-    if (!session.gym) return null;
+  const session = await getSessionContext();
+  if (!session.gym) return null;
 
-    const selectedDate = searchParams?.date ?? format(new Date(), "yyyy-MM-dd");
-    data = await getAttendancePageData(session.gym.id, selectedDate);
-    const membershipLookup = new Map((data?.memberships ?? []).map((membership) => [membership.id, membership]));
+  const selectedDate = searchParams?.date ?? format(new Date(), "yyyy-MM-dd");
+  const data = await getAttendancePageData(session.gym.id, selectedDate);
+  const membershipLookup = new Map((data?.memberships ?? []).map((membership) => [membership.id, membership]));
 
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Attendance" description="Manual check-in built for the front desk. One check-in per member per day." />
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Attendance" description="Manual check-in built for the front desk. One check-in per member per day." />
 
       <Card>
         <CardHeader>
@@ -87,17 +85,6 @@ export default async function AttendancePage({
           )}
         </CardContent>
       </Card>
-      </div>
-    );
-  } catch (err: any) {
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-xl font-bold text-danger">Attendance Loading Failed</h1>
-        <p className="mt-2 text-muted-foreground">{err?.message || "Unknown error occurred"}</p>
-        <pre className="mt-4 overflow-auto rounded-xl bg-white/5 p-4 text-left text-xs text-muted-foreground">
-          {JSON.stringify(err, null, 2)}
-        </pre>
-      </div>
-    );
-  }
+    </div>
+  );
 }
