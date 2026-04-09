@@ -51,7 +51,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
       .maybeSingle(),
     supabase
       .from("gym_subscriptions")
-      .select("id, tier, status")
+      .select("id, tier, status, current_period_end")
       .eq("gym_id", gymUser.gym_id)
       .maybeSingle(),
   ]);
@@ -61,6 +61,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
         id: subscriptionResponse.data.id as string,
         tier: (subscriptionResponse.data.tier as "basic" | "growth") ?? "basic",
         status: subscriptionResponse.data.status as string,
+        current_period_end: subscriptionResponse.data.current_period_end as string | null,
       }
     : null;
 

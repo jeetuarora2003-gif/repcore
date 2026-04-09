@@ -33,6 +33,7 @@ export type SessionContext = {
     id: string;
     tier: GymTier;
     status: string;
+    current_period_end: string | null;
   } | null;
   entitlements: Entitlements;
 };
