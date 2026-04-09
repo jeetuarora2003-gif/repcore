@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  archiveMembershipAction,
   freezeSubscriptionAction,
   renewSubscriptionAction,
   updateMemberProfileAction,
 } from "@/lib/actions";
+import { ArchiveMemberButton } from "@/components/members/archive-member-button";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMemberDetailData, getMembershipPlans, getReminderTemplates } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
@@ -129,13 +129,9 @@ export default async function MemberDetailPage({
                     <Button type="submit">Update profile</Button>
                   </div>
                 </form>
-                <form action={archiveMembershipAction} className="mt-4">
-                  <input type="hidden" name="membershipId" value={member.id} />
-                  <input type="hidden" name="archiveReason" value="Archived from member detail" />
-                  <Button type="submit" variant="outline">
-                    Archive member
-                  </Button>
-                </form>
+                <div className="mt-4">
+                  <ArchiveMemberButton membershipId={member.id} />
+                </div>
               </CardContent>
             </Card>
 

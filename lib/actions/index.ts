@@ -237,9 +237,11 @@ export async function archiveMembershipAction(formData: FormData) {
     .limit(1)
     .maybeSingle();
 
-  if (liveSubscription) {
-    throw new Error("Archive the membership only after the live subscription is finished.");
-  }
+  // Allow archiving even with live subscriptions to support mistake correction
+  // Historical records will still be preserved in v_subscription_effective_dates
+  // if (liveSubscription) {
+  //   throw new Error("Archive the membership only after the live subscription is finished.");
+  // }
 
   const { error } = await supabase
     .from("memberships")
