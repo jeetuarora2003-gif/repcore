@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PullToRefresh } from "@/components/shared/pull-to-refresh";
+import { Plus } from "lucide-react";
 
 type AppShellProps = {
   gymName: string;
@@ -114,6 +116,19 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
         </header>
 
         <main className="mobile-safe flex-1 px-4 py-5 pb-32 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+
+        {/* Pull-to-refresh (mobile only) */}
+        <PullToRefresh />
+
+        {/* FAB — quick add member */}
+        <Link
+          href="/members"
+          className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_4px_20px_rgba(0,0,0,0.4)] active:scale-90 transition-all duration-200 lg:hidden"
+          style={{ boxShadow: "0 4px 20px var(--accent, #2563eb)55" }}
+          aria-label="Add member"
+        >
+          <Plus className="h-6 w-6" />
+        </Link>
 
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">
