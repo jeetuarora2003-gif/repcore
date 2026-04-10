@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const dashboard = await getDashboardData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       <PageHeader
         title="Dashboard"
         description="Your gym at a glance. Focus on renewals, collections, and today's floor activity."
