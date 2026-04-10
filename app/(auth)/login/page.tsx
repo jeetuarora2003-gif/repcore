@@ -1,28 +1,13 @@
-"use client";
-
+import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
 import { loginAction } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { SubmitButton } from "@/components/shared/submit-button";
+import { LoginError } from "@/components/auth/login-error";
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
-  const [isPending, startTransition] = useTransition();
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    startTransition(async () => {
-      await loginAction(formData);
-    });
-  };
-
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -30,19 +15,21 @@ export default function LoginPage() {
         <CardDescription>Pick up where your gym left off.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form action={loginAction} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="owner@gym.com" required disabled={isPending} />
+            <Input id="email" name="email" type="email" placeholder="owner@gym.com" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" placeholder="Enter your password" required disabled={isPending} />
+            <Input id="password" name="password" type="password" placeholder="Enter your password" required />
           </div>
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : "Sign in"}
-          </Button>
+          <Suspense fallback={null}>
+            <LoginError />
+          </Suspense>
+          <SubmitButton className="w-full" pendingLabel="Signing in...">
+            Sign in
+          </SubmitButton>
         </form>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New to RepCore?{" "}
