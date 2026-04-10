@@ -5,6 +5,7 @@ import { Toaster } from "@/components/shared/app-toaster";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import NextTopLoader from "nextjs-toploader";
 import { ThemeInitScript } from "@/components/shared/theme-picker";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -105,6 +106,7 @@ export default function RootLayout({
         <PwaRegister />
         {children}
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
