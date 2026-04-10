@@ -1,12 +1,82 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RepCore icon">
-  <rect width="512" height="512" rx="112" fill="#0A0A0A" />
-  <rect x="96" y="96" width="320" height="320" rx="88" fill="url(#g)" stroke="rgba(255,255,255,0.08)" />
-  <path d="M184 154h70c54 0 86 26 86 72 0 31-16 53-45 63l52 69h-55l-44-60h-18v60h-46V154Zm46 108h20c28 0 43-11 43-31 0-21-15-31-43-31h-20v62Z" fill="#F5F7FB"/>
-  <path d="M171 391V154h46v237z" fill="#2563EB"/>
   <defs>
-    <linearGradient id="g" x1="256" y1="96" x2="256" y2="416" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#111111" stop-opacity="0.98"/>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1a1a22"/>
+      <stop offset="1" stop-color="#0a0a0e"/>
     </linearGradient>
+    <linearGradient id="metalR" x1="160" y1="130" x2="380" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.4" stop-color="#d0d8e8"/>
+      <stop offset="1" stop-color="#8a9ab8"/>
+    </linearGradient>
+    <linearGradient id="barBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Texture pattern -->
+    <pattern id="texture" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="none"/>
+      <circle cx="1" cy="1" r="0.6" fill="rgba(255,255,255,0.025)"/>
+      <circle cx="3" cy="3" r="0.6" fill="rgba(255,255,255,0.015)"/>
+    </pattern>
+    <clipPath id="roundedClip">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
   </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <!-- Texture overlay -->
+  <rect width="512" height="512" rx="112" fill="url(#texture)"/>
+  <!-- Subtle vignette -->
+  <radialGradient id="vignette" cx="50%" cy="40%" r="65%">
+    <stop offset="0" stop-color="rgba(255,255,255,0.04)"/>
+    <stop offset="1" stop-color="rgba(0,0,0,0.35)"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="112" fill="url(#vignette)"/>
+
+  <!-- R letterform - shadow layer -->
+  <g filter="url(#shadow)" clip-path="url(#roundedClip)">
+    <!-- R stem -->
+    <rect x="148" y="128" width="58" height="260" rx="6" fill="#60708a" opacity="0.5" transform="translate(6,8)"/>
+  </g>
+
+  <!-- R letterform - main -->
+  <g filter="url(#shadow)">
+    <!-- Stem -->
+    <rect x="148" y="128" width="58" height="260" rx="6" fill="url(#metalR)"/>
+    <!-- Bowl top bar -->
+    <rect x="148" y="128" width="166" height="50" rx="6" fill="url(#metalR)"/>
+    <!-- Bowl right side -->
+    <rect x="256" y="128" width="58" height="138" rx="6" fill="url(#metalR)"/>
+    <!-- Bowl bottom bar -->
+    <rect x="148" y="216" width="166" height="50" rx="6" fill="url(#metalR)"/>
+    <!-- Diagonal leg (sharp, angled) -->
+    <polygon points="206,266 314,266 370,388 306,388" fill="url(#metalR)"/>
+    <!-- Inner cutout (counter of R) -->
+    <rect x="206" y="178" width="108" height="38" rx="4" fill="#0f0f18"/>
+  </g>
+
+  <!-- Diagonal slash accent top-left of R -->
+  <polygon points="148,128 206,128 148,190" fill="rgba(255,255,255,0.18)" clip-path="url(#roundedClip)"/>
+
+  <!-- Blue bar chart bars -->
+  <g filter="url(#glow)">
+    <!-- bar 1 (shortest) -->
+    <rect x="152" y="318" width="22" height="54" rx="4" fill="url(#barBlue)" opacity="0.92"/>
+    <!-- bar 2 -->
+    <rect x="182" y="300" width="22" height="72" rx="4" fill="url(#barBlue)" opacity="0.96"/>
+    <!-- bar 3 (tallest) -->
+    <rect x="212" y="278" width="22" height="94" rx="4" fill="#3b82f6"/>
+  </g>
+
+  <!-- Blue glow reflection under bars -->
+  <ellipse cx="200" cy="378" rx="48" ry="8" fill="#2563eb" opacity="0.18"/>
 </svg>
