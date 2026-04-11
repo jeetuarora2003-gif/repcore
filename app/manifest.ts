@@ -11,24 +11,18 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#16181d",
     orientation: "portrait",
     lang: "en-IN",
-    // v2 — icon redesign April 2026
     icons: [
       {
-        src: "/icon.svg?v=2",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icon.png?v=3",
+        sizes: "1024x1024",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon.svg?v=2",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icon.png?v=3",
+        sizes: "1024x1024",
+        type: "image/png",
         purpose: "maskable",
-      },
-      {
-        src: "/apple-icon.svg?v=2",
-        sizes: "180x180",
-        type: "image/svg+xml",
       },
     ],
   };
