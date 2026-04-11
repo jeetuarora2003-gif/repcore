@@ -5,6 +5,7 @@ import { Toaster } from "@/components/shared/app-toaster";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import NextTopLoader from "nextjs-toploader";
 import { ThemeInitScript } from "@/components/shared/theme-picker";
+import { SplashScreen } from "@/components/shared/splash-screen";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,6 +51,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "RepCore",
+    startupImage: [
+      { url: "/splash.svg" },
+    ],
   },
   formatDetection: {
     telephone: false,
@@ -62,7 +66,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0A",
+  themeColor: "#16181d",
   colorScheme: "dark",
   viewportFit: "cover",
 };
@@ -98,9 +102,13 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Apple PWA splash screen meta tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-startup-image" href="/splash.svg" />
       </head>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
-        {/* Top loader uses accent CSS variable so it matches whatever theme the gym picks */}
+        <SplashScreen />
         <NextTopLoader color="var(--accent, #2563eb)" showSpinner={false} shadow="0 0 10px var(--accent, #2563eb), 0 0 5px var(--accent, #2563eb)" />
         <PwaRegister />
         {children}
