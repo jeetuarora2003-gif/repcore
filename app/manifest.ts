@@ -7,23 +7,26 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Premium gym management SaaS for independent Indian gyms.",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#0A0A0A",
-    theme_color: "#0A0A0A",
+    background_color: "#16181d",
+    theme_color: "#16181d",
     orientation: "portrait",
     lang: "en-IN",
+    // v2 — icon redesign April 2026
     icons: [
       {
-        src: "/icon.svg",
+        src: "/icon.svg?v=2",
         sizes: "any",
         type: "image/svg+xml",
+        purpose: "any",
       },
       {
-        src: "/icon.svg",
+        src: "/icon.svg?v=2",
         sizes: "any",
         type: "image/svg+xml",
+        purpose: "maskable",
       },
       {
-        src: "/apple-icon.svg",
+        src: "/apple-icon.svg?v=2",
         sizes: "180x180",
         type: "image/svg+xml",
       },
