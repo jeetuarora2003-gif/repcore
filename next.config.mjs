@@ -6,11 +6,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    ppr: false,
+  },
   images: {
+    formats: ["image/webp"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "czpsobwtfnzqtjxnnfis.supabase.co",
       },
     ],
   },
