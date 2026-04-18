@@ -16,6 +16,5 @@ export const navigationItems = [
   { href: "/attendance", label: "Attendance", icon: UserRound },
   { href: "/reminders", label: "Reminders", icon: BellRing },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/settings/subscription", label: "Subscription", icon: ShieldCheck },
   { href: "/help", label: "Help Center", icon: HelpCircle },
 ] as const;
