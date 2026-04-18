@@ -115,3 +115,15 @@ export const reminderTemplateSchema = z.object({
   templateType: z.enum(["fee_due", "membership_expiry", "welcome"]),
   body: z.string().min(10),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(6),
+  confirmPassword: z.string().min(6),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});

@@ -21,7 +21,10 @@ export default function LoginPage() {
             <Input id="email" name="email" type="email" placeholder="owner@gym.com" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link href="/forgot-password" size="sm" className="text-[12px] text-accent hover:underline font-medium">Forgot password?</Link>
+            </div>
             <Input id="password" name="password" type="password" placeholder="Enter your password" required />
           </div>
           <Suspense fallback={null}>
