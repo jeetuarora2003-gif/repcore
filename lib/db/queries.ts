@@ -262,7 +262,7 @@ export async function getReminderTemplates(gymId: string) {
   return (data as ReminderTemplateRecord[]) ?? [];
 }
 
-export async function getGymCoreData(gymId: string, queryArchived: boolean = true) {
+export async function getGymCoreData(gymId: string, queryArchived: boolean = true, attendanceLimitDays?: number) {
   const supabase = createSupabaseServerClient();
 
   let membershipsQuery = supabase
@@ -288,7 +288,14 @@ export async function getGymCoreData(gymId: string, queryArchived: boolean = tru
     supabase.from("v_subscription_effective_dates").select("*").eq("gym_id", gymId),
     supabase.from("v_invoice_balances").select("*").eq("gym_id", gymId),
     supabase.from("payments").select("*").eq("gym_id", gymId).order("received_on", { ascending: false }),
-    supabase.from("attendance_logs").select("*").eq("gym_id", gymId).order("check_in_date", { ascending: false }),
+    (() => {
+      let q = supabase.from("attendance_logs").select("*").eq("gym_id", gymId).order("check_in_date", { ascending: false });
+      if (attendanceLimitDays) {
+        const d = format(subDays(new Date(), attendanceLimitDays), "yyyy-MM-dd");
+        q = q.gte("check_in_date", d);
+      }
+      return q;
+    })(),
     supabase.from("message_logs").select("*").eq("gym_id", gymId).order("created_at", { ascending: false }).limit(100),
     supabase.from("subscription_freezes").select("*").eq("gym_id", gymId),
   ]);
@@ -305,7 +312,7 @@ export async function getGymCoreData(gymId: string, queryArchived: boolean = tru
 }
 
 export async function getDashboardData(gymId: string, warningDays: number) {
-  const { memberships, subscriptions, invoiceBalances, payments, attendanceLogs, messageLogs, freezes } = await getGymCoreData(gymId);
+  const { memberships, subscriptions, invoiceBalances, payments, attendanceLogs, messageLogs, freezes } = await getGymCoreData(gymId, true, 2);
   const today = startOfDay(new Date());
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
