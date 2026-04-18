@@ -25,7 +25,8 @@ export default async function BillingPage({
   const { financialOverview } = data;
 
   const membershipLookup = new Map(data.memberships.map((m) => [m.id, m]));
-  const selectedMembershipId = searchParams.membershipId ?? data.memberships[0]?.id;
+  const searchParamsObj = await searchParams;
+  const selectedMembershipId = searchParamsObj.membershipId ?? data.memberships[0]?.id;
   const openInvoices = data.invoices.filter(
     (inv) => inv.derived_status !== "paid" && inv.derived_status !== "voided",
   );
