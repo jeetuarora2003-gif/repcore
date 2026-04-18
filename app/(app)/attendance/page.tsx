@@ -7,7 +7,6 @@ import { getAttendancePageData } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate, formatRelativeDate } from "@/lib/utils/format";
@@ -62,11 +61,7 @@ function SourceIcon({ source }: { source?: string }) {
   );
 }
 
-export default async function AttendancePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ date?: string; error?: string }>;
-}) {
+export default async function AttendancePage() {
   const session = await getSessionContext();
   const searchParamsObj = await searchParams;
   const selectedDate = searchParamsObj.date ?? format(new Date(), "yyyy-MM-dd");
@@ -117,6 +112,7 @@ export default async function AttendancePage({
       <Card>
         <CardHeader>
           <CardTitle>Mark attendance</CardTitle>
+          <p className="text-sm text-muted-foreground">Search a member by name or phone number.</p>
         </CardHeader>
         <CardContent>
           <form action={markAttendanceAction} className="grid gap-4 sm:grid-cols-3">
@@ -153,6 +149,9 @@ export default async function AttendancePage({
                 Check in
               </Button>
             </div>
+            <Button type="submit" className="w-full h-12 rounded-2xl bg-accent shadow-glow">
+              Log Entry
+            </Button>
           </form>
         </CardContent>
       </Card>

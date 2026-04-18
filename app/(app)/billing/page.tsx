@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: { membershipId?: string };
+  searchParams: Promise<{ membershipId?: string }>;
 }) {
   const session = await getSessionContext();
   const data = await getBillingPageData(session.gym!.id);

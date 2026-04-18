@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { FileSpreadsheet, Wallet } from "lucide-react";
 import { getSessionContext } from "@/lib/auth/session";
 import { getReportsData } from "@/lib/db/queries";
@@ -10,7 +11,9 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 
 export default async function ReportsPage() {
   const session = await getSessionContext();
-  const reports = await getReportsData(session.gym!.id, session.settings?.expiring_warning_days ?? 7);
+  if (!session.gym) redirect("/setup");
+
+  const reports = await getReportsData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
 
   return (
     <div className="space-y-6">

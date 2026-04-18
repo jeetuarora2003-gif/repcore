@@ -1,12 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="RepCore apple icon">
-  <rect width="180" height="180" rx="40" fill="#0A0A0A" />
-  <rect x="24" y="24" width="132" height="132" rx="34" fill="url(#g)" stroke="rgba(255,255,255,0.08)" />
-  <path d="M63 45h27c22 0 34 10 34 28 0 12-6 21-18 25l21 28h-22l-17-24H79v24H63V45Zm16 41h10c11 0 18-4 18-12 0-9-7-13-18-13H79v25Z" fill="#F5F7FB"/>
-  <path d="M58 126V45h17v81z" fill="#2563EB"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="RepCore">
   <defs>
-    <linearGradient id="g" x1="90" y1="24" x2="90" y2="156" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#111111" stop-opacity="0.98"/>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2a2d35"/>
+      <stop offset="1" stop-color="#16181d"/>
     </linearGradient>
+    <radialGradient id="vignette" cx="90" cy="74" r="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3a3d45" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#0e1014" stop-opacity="0.9"/>
+    </radialGradient>
+    <linearGradient id="metalR" x1="32" y1="26" x2="148" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.3" stop-color="#e0e6f0"/>
+      <stop offset="0.65" stop-color="#b0bac8"/>
+      <stop offset="1" stop-color="#707a8a"/>
+    </linearGradient>
+    <linearGradient id="barG1" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#5ab4f0"/><stop offset="1" stop-color="#1a5fd4"/>
+    </linearGradient>
+    <linearGradient id="barG2" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#4aaee8"/><stop offset="1" stop-color="#1857c8"/>
+    </linearGradient>
+    <linearGradient id="barG3" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#3aa0de"/><stop offset="1" stop-color="#1650be"/>
+    </linearGradient>
+    <filter id="rShadow"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/></filter>
+    <clipPath id="roundClip"><rect width="180" height="180" rx="40"/></clipPath>
   </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bgGrad)"/>
+  <rect width="180" height="180" rx="40" fill="url(#vignette)"/>
+  <g filter="url(#rShadow)" clip-path="url(#roundClip)">
+    <rect x="46" y="28" width="24" height="124" rx="2" fill="url(#metalR)"/>
+    <rect x="46" y="28" width="68" height="22" rx="2" fill="url(#metalR)"/>
+    <rect x="94" y="28" width="20" height="56" rx="2" fill="url(#metalR)"/>
+    <rect x="46" y="62" width="68" height="22" rx="2" fill="url(#metalR)"/>
+    <rect x="94" y="28" width="20" height="56" rx="2" fill="url(#metalR)"/>
+    <rect x="46" y="62" width="68" height="22" rx="2" fill="url(#metalR)"/>
+    <!-- counter cutout -->
+    <rect x="70" y="33" width="42" height="45" rx="2" fill="#1e2028"/>
+    <!-- diagonal leg -->
+    <polygon points="70,84 116,84 136,152 92,152" fill="url(#metalR)"/>
+    <!-- highlight -->
+    <polygon points="46,28 70,28 46,52" fill="white" opacity="0.4"/>
+  </g>
+  <g clip-path="url(#roundClip)">
+    <rect x="40" y="96" width="11" height="34" rx="2" fill="url(#barG1)"/>
+    <rect x="55" y="83" width="11" height="47" rx="2" fill="url(#barG2)"/>
+    <rect x="70" y="70" width="11" height="60" rx="2" fill="url(#barG3)"/>
+  </g>
+  <ellipse cx="62" cy="132" rx="22" ry="3.5" fill="#2563eb" opacity="0.22" clip-path="url(#roundClip)"/>
 </svg>
