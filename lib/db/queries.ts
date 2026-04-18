@@ -647,3 +647,262 @@ export async function getPublicMemberCardData(memberId: string) {
     gymLogo: gyms.logo_url,
   };
 }
+
+// =============================================
+// Reminders Pipeline — 3-stage date-aware system
+// =============================================
+
+export type ReminderPipelineMember = {
+  membershipId: string;
+  memberId: string;
+  memberName: string;
+  memberPhone: string;
+  subscriptionId: string;
+  planName: string;
+  endDate: string;
+  daysRemaining: number;
+  duePaise: number;
+  reminder5SentAt: string | null;
+  reminder3SentAt: string | null;
+  reminder1SentAt: string | null;
+};
+
+/**
+ * Get all members eligible for the 3-stage reminder pipeline.
+ * Only returns members whose subscription ends in exactly 5, 3, or 1 days (IST)
+ * and who have outstanding dues.
+ */
+export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
+  const supabase = createSupabaseServerClient();
+
+  // Fetch active memberships with their current subscription + reminder columns
+  const { data: subscriptions } = await supabase
+    .from("v_subscription_effective_dates")
+    .select("subscription_id, gym_id, membership_id, plan_snapshot_name, effective_end_date, status, reminder_5_sent_at, reminder_3_sent_at, reminder_1_sent_at")
+    .eq("gym_id", gymId)
+    .in("status", ["active", "frozen"]);
+
+  if (!subscriptions || subscriptions.length === 0) return [];
+
+  const membershipIds = subscriptions.map((s: any) => s.membership_id);
+
+  // Fetch member info for these memberships
+  const { data: memberships } = await supabase
+    .from("memberships")
+    .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone)")
+    .eq("gym_id", gymId)
+    .is("archived_at", null)
+    .is("lapsed_at", null)
+    .in("id", membershipIds);
+
+  // Fetch invoice balances
+  const { data: invoices } = await supabase
+    .from("v_invoice_balances")
+    .select("membership_id, amount_due_paise, derived_status")
+    .eq("gym_id", gymId)
+    .in("membership_id", membershipIds);
+
+  // Calculate today in IST
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+
+  const membershipMap = new Map(
+    ((memberships as any[]) ?? []).map((m: any) => {
+      const member = Array.isArray(m.members) ? m.members[0] : m.members;
+      return [m.id, { memberId: m.member_id, memberName: member.full_name, memberPhone: member.phone }];
+    }),
+  );
+
+  // Sum dues per membership
+  const duesMap = new Map<string, number>();
+  for (const inv of (invoices as any[]) ?? []) {
+    if (inv.derived_status === "voided") continue;
+    duesMap.set(inv.membership_id, (duesMap.get(inv.membership_id) ?? 0) + inv.amount_due_paise);
+  }
+
+  const results: ReminderPipelineMember[] = [];
+
+  for (const sub of subscriptions as any[]) {
+    const memberInfo = membershipMap.get(sub.membership_id);
+    if (!memberInfo) continue;
+
+    const duePaise = duesMap.get(sub.membership_id) ?? 0;
+    if (duePaise <= 0) continue; // Skip fully paid members
+
+    // Calculate days remaining (IST-aware)
+    const endDate = new Date(sub.effective_end_date + "T00:00:00+05:30");
+    const endDateLocal = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    const diffMs = endDateLocal.getTime() - todayIST.getTime();
+    const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    // Only include 5, 3, or 1 day members
+    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
+
+    results.push({
+      membershipId: sub.membership_id,
+      memberId: memberInfo.memberId,
+      memberName: memberInfo.memberName,
+      memberPhone: memberInfo.memberPhone,
+      subscriptionId: sub.subscription_id,
+      planName: sub.plan_snapshot_name,
+      endDate: sub.effective_end_date,
+      daysRemaining,
+      duePaise,
+      reminder5SentAt: sub.reminder_5_sent_at ?? null,
+      reminder3SentAt: sub.reminder_3_sent_at ?? null,
+      reminder1SentAt: sub.reminder_1_sent_at ?? null,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Server-side lapse check — marks memberships as lapsed if:
+ * - Current subscription effective_end_date < today (IST)
+ * - Outstanding dues > 0
+ * - Not already lapsed or archived
+ *
+ * Called on reminders + members page load. No pg_cron dependency.
+ */
+export async function markMembershipsLapsed(gymId: string): Promise<number> {
+  const supabase = createSupabaseServerClient();
+
+  // Get all active subscriptions for this gym
+  const { data: subscriptions } = await supabase
+    .from("v_subscription_effective_dates")
+    .select("subscription_id, membership_id, effective_end_date, status")
+    .eq("gym_id", gymId)
+    .in("status", ["active", "frozen"]);
+
+  if (!subscriptions || subscriptions.length === 0) return 0;
+
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+
+  // Find subscriptions that have expired (end_date < today IST)
+  const expiredMembershipIds = (subscriptions as any[])
+    .filter((sub) => {
+      const endDate = new Date(sub.effective_end_date + "T00:00:00+05:30");
+      return endDate < todayIST;
+    })
+    .map((sub) => sub.membership_id);
+
+  if (expiredMembershipIds.length === 0) return 0;
+
+  // Check which of these have outstanding dues
+  const { data: invoices } = await supabase
+    .from("v_invoice_balances")
+    .select("membership_id, amount_due_paise, derived_status")
+    .eq("gym_id", gymId)
+    .in("membership_id", expiredMembershipIds);
+
+  const duesMap = new Map<string, number>();
+  for (const inv of (invoices as any[]) ?? []) {
+    if (inv.derived_status === "voided") continue;
+    duesMap.set(inv.membership_id, (duesMap.get(inv.membership_id) ?? 0) + inv.amount_due_paise);
+  }
+
+  const toLapse = expiredMembershipIds.filter((id) => (duesMap.get(id) ?? 0) > 0);
+  if (toLapse.length === 0) return 0;
+
+  // Only lapse memberships not already lapsed/archived
+  const { data: eligible } = await supabase
+    .from("memberships")
+    .select("id")
+    .eq("gym_id", gymId)
+    .is("archived_at", null)
+    .is("lapsed_at", null)
+    .in("id", toLapse);
+
+  const eligibleIds = ((eligible as any[]) ?? []).map((m) => m.id);
+  if (eligibleIds.length === 0) return 0;
+
+  const { error } = await supabase
+    .from("memberships")
+    .update({ lapsed_at: new Date().toISOString() })
+    .eq("gym_id", gymId)
+    .in("id", eligibleIds);
+
+  if (error) {
+    console.error("[markMembershipsLapsed]", error.message);
+    return 0;
+  }
+
+  return eligibleIds.length;
+}
+
+export type LapsedMember = {
+  membershipId: string;
+  memberId: string;
+  memberName: string;
+  memberPhone: string;
+  lapsedAt: string;
+  lastPlanName: string | null;
+  lastEndDate: string | null;
+  duePaise: number;
+};
+
+/**
+ * Fetch all lapsed members for the gym (lapsed_at IS NOT NULL, archived_at IS NULL).
+ */
+export async function getLapsedMembers(gymId: string): Promise<LapsedMember[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data: memberships } = await supabase
+    .from("memberships")
+    .select("id, member_id, lapsed_at, members!inner(id, full_name, phone)")
+    .eq("gym_id", gymId)
+    .is("archived_at", null)
+    .not("lapsed_at", "is", null);
+
+  if (!memberships || memberships.length === 0) return [];
+
+  const membershipIds = (memberships as any[]).map((m) => m.id);
+
+  const [subsResponse, invoicesResponse] = await Promise.all([
+    supabase
+      .from("v_subscription_effective_dates")
+      .select("subscription_id, membership_id, plan_snapshot_name, effective_end_date, status")
+      .eq("gym_id", gymId)
+      .in("membership_id", membershipIds)
+      .order("effective_end_date", { ascending: false }),
+    supabase
+      .from("v_invoice_balances")
+      .select("membership_id, amount_due_paise, derived_status")
+      .eq("gym_id", gymId)
+      .in("membership_id", membershipIds),
+  ]);
+
+  const subsMap = new Map<string, { planName: string; endDate: string }>();
+  for (const sub of (subsResponse.data as any[]) ?? []) {
+    if (!subsMap.has(sub.membership_id)) {
+      subsMap.set(sub.membership_id, {
+        planName: sub.plan_snapshot_name,
+        endDate: sub.effective_end_date,
+      });
+    }
+  }
+
+  const duesMap = new Map<string, number>();
+  for (const inv of (invoicesResponse.data as any[]) ?? []) {
+    if (inv.derived_status === "voided") continue;
+    duesMap.set(inv.membership_id, (duesMap.get(inv.membership_id) ?? 0) + inv.amount_due_paise);
+  }
+
+  return (memberships as any[]).map((m) => {
+    const member = Array.isArray(m.members) ? m.members[0] : m.members;
+    const subInfo = subsMap.get(m.id);
+    return {
+      membershipId: m.id,
+      memberId: m.member_id,
+      memberName: member.full_name,
+      memberPhone: member.phone,
+      lapsedAt: m.lapsed_at,
+      lastPlanName: subInfo?.planName ?? null,
+      lastEndDate: subInfo?.endDate ?? null,
+      duePaise: duesMap.get(m.id) ?? 0,
+    };
+  });
+}
+
