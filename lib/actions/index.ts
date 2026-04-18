@@ -136,8 +136,8 @@ export async function forgotPasswordAction(formData: FormData) {
     const origin = `${protocol}://${host}`;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
     
-    // Secure redirection via confirmation route
-    const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
+    // Secure redirection via standardized callback route
+    const redirectTo = `${siteUrl}/auth/callback?next=/reset-password`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
       redirectTo,
