@@ -36,10 +36,6 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
       <aside className="hidden border-r border-border bg-black/30 px-4 py-6 lg:flex lg:flex-col">
         <div className="panel-muted flex items-center gap-3 px-4 py-3">
           <Logo size="sm" />
-          <div className="flex flex-col">
-            <p className="truncate text-sm font-semibold text-foreground leading-tight">{gymName}</p>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Management Suite</p>
-          </div>
         </div>
         <nav className="mt-6 space-y-1">
           {navItems.map((item) => {
