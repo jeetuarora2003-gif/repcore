@@ -3,20 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getSessionContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { format, parse, parseISO, isValid, fromUnixTime } from "date-fns";
-
-export type ColumnMapping = {
-  userIdCol: number;   // 0-based column index
-  dateCol: number;
-  timeCol: number | null;  // null if datetime is combined in dateCol
-};
-
-export type ParsedAttendanceRow = {
-  deviceUserId: string;
-  checkInDate: string;   // "yyyy-MM-dd"
-  checkedInAt: string;   // ISO timestamp
-  rawDatetime: string;
-};
+import { ParsedAttendanceRow } from "@/lib/utils/attendance-parser";
+export type { ColumnMapping, ParsedAttendanceRow } from "@/lib/utils/attendance-parser";
 
 export type UploadResult = {
   imported: number;
@@ -24,93 +12,6 @@ export type UploadResult = {
   unmatchedIds: string[];
   error?: string;
 };
-
-// --- Date parsing helpers ---
-
-function parseBiometricDatetime(dateRaw: string, timeRaw?: string): Date | null {
-  const raw = timeRaw ? `${dateRaw.trim()} ${timeRaw.trim()}` : dateRaw.trim();
-
-  // Pure unix timestamp
-  if (/^\d{9,11}$/.test(raw)) {
-    const d = fromUnixTime(Number(raw));
-    return isValid(d) ? d : null;
-  }
-
-  // ISO / ISO-like: "2024-01-15 09:32:00"
-  const iso = parseISO(raw.replace(" ", "T"));
-  if (isValid(iso)) return iso;
-
-  // "15/01/2024 09:32"
-  for (const fmt of ["dd/MM/yyyy HH:mm:ss", "dd/MM/yyyy HH:mm"]) {
-    try {
-      const d = parse(raw, fmt, new Date());
-      if (isValid(d)) return d;
-    } catch {}
-  }
-
-  // "01/15/2024 09:32:00 AM" / "01/15/2024 09:32 AM"
-  for (const fmt of ["MM/dd/yyyy hh:mm:ss a", "MM/dd/yyyy hh:mm a"]) {
-    try {
-      const d = parse(raw, fmt, new Date());
-      if (isValid(d)) return d;
-    } catch {}
-  }
-
-  return null;
-}
-
-// --- CSV / TXT row splitter ---
-function splitRow(line: string): string[] {
-  // Handle CSV with quoted fields
-  if (line.includes(",")) {
-    const cols: string[] = [];
-    let inQuote = false;
-    let cur = "";
-    for (const ch of line) {
-      if (ch === '"') { inQuote = !inQuote; continue; }
-      if (ch === "," && !inQuote) { cols.push(cur); cur = ""; continue; }
-      cur += ch;
-    }
-    cols.push(cur);
-    return cols.map((c) => c.trim());
-  }
-  // Tab-separated (ADMS export format)
-  if (line.includes("\t")) return line.split("\t").map((c) => c.trim());
-  // Space-separated fallback
-  return line.split(/\s{2,}/).map((c) => c.trim());
-}
-
-// --- Parse all rows using owner-specified column mapping ---
-export function parseFileRows(
-  rawText: string,
-  mapping: ColumnMapping,
-): ParsedAttendanceRow[] {
-  const lines = rawText.split(/\r?\n/).filter((l) => l.trim());
-  const results: ParsedAttendanceRow[] = [];
-
-  for (const line of lines) {
-    const cols = splitRow(line);
-    const deviceUserId = cols[mapping.userIdCol]?.trim();
-    const dateRaw = cols[mapping.dateCol]?.trim();
-    const timeRaw = mapping.timeCol !== null ? cols[mapping.timeCol]?.trim() : undefined;
-
-    if (!deviceUserId || !dateRaw) continue;
-    // Skip header rows (non-numeric user IDs that look like "User ID", "No.", etc.)
-    if (/^[a-z_\s]+$/i.test(deviceUserId)) continue;
-
-    const parsed = parseBiometricDatetime(dateRaw, timeRaw);
-    if (!parsed) continue;
-
-    results.push({
-      deviceUserId,
-      checkInDate: format(parsed, "yyyy-MM-dd"),
-      checkedInAt: parsed.toISOString(),
-      rawDatetime: timeRaw ? `${dateRaw} ${timeRaw}` : dateRaw,
-    });
-  }
-
-  return results;
-}
 
 // --- Server Action: Import attendance from parsed rows ---
 export async function importBiometricFileAction(
