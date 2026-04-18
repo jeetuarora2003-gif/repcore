@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSessionContext } from "@/lib/auth/session";
 import { getSubscriptionsPageData } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,7 +10,9 @@ import { formatDate } from "@/lib/utils/format";
 
 export default async function SubscriptionsPage() {
   const session = await getSessionContext();
-  const groups = await getSubscriptionsPageData(session.gym!.id, session.settings?.expiring_warning_days ?? 7);
+  if (!session.gym) redirect("/setup");
+
+  const groups = await getSubscriptionsPageData(session.gym.id, session.settings?.expiring_warning_days ?? 7);
 
   return (
     <div className="space-y-6">

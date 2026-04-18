@@ -23,9 +23,13 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
+const BOTTOM_NAV_HREFS = ["/dashboard", "/members", "/billing", "/attendance"];
+
 export function AppShell({ gymName, role, tier, userEmail, children }: AppShellProps) {
   const pathname = usePathname();
   const navItems = navigationItems.filter((item) => !(role !== "owner" && item.href === "/settings"));
+  const bottomNavItems = navItems.filter((item) => BOTTOM_NAV_HREFS.includes(item.href));
+  const avatarText = (userEmail.split("@")[0] ?? userEmail).slice(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
@@ -37,7 +41,6 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
             <p className="truncate text-xs font-semibold text-foreground">{gymName}</p>
           </div>
         </div>
-
         <nav className="mt-6 space-y-1">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.href);
@@ -56,16 +59,12 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
             );
           })}
         </nav>
-
         <div className="mt-auto panel-muted p-4">
           <Badge variant={tier === "growth" ? "accent" : "default"}>{tier === "growth" ? "Growth" : "Basic"}</Badge>
           <p className="mt-3 text-sm font-medium">Role: {role === "owner" ? "Owner" : "Front desk"}</p>
           <p className="mt-1 text-sm text-muted-foreground">Your gym. Fully in control.</p>
           <Button asChild variant="outline" className="mt-4 w-full justify-between">
-            <a href="/logout">
-              Sign out
-              <LogOut className="h-4 w-4" />
-            </a>
+            <a href="/logout">Sign out<LogOut className="h-4 w-4" /></a>
           </Button>
         </div>
       </aside>
@@ -75,67 +74,54 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="lg:hidden">
-                <Button variant="outline" size="icon" className="rounded-2xl">
-                  <Menu className="h-5 w-5" />
-                </Button>
+                <Button variant="outline" size="icon" className="rounded-2xl"><Menu className="h-5 w-5" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60">
                 {navItems.map((item) => (
                   <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
+                    <Link href={item.href} className="flex items-center gap-3"><item.icon className="h-4 w-4" />{item.label}</Link>
                   </DropdownMenuItem>
                 ))}
                 <Separator className="my-2" />
                 <DropdownMenuItem asChild>
-                  <a href="/logout" className="flex items-center gap-3 text-danger">
-                    <LogOut className="h-4 w-4" />
-                    Sign out
-                  </a>
+                  <a href="/logout" className="flex items-center gap-3 text-danger"><LogOut className="h-4 w-4" />Sign out</a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{gymName}</p>
               <p className="text-xs text-muted-foreground">{role === "owner" ? "Owner access" : "Front desk access"}</p>
             </div>
-
             <div className="flex items-center gap-3">
               {role === "owner" ? (
                 <Link href="/settings/subscription">
-                  <Badge variant={tier === "growth" ? "accent" : "default"} className="cursor-pointer hover:opacity-80 active:scale-95 transition-all">
-                    {tier === "growth" ? "Growth" : "Basic"}
-                  </Badge>
+                  <Badge variant={tier === "growth" ? "accent" : "default"} className="cursor-pointer hover:opacity-80 active:scale-95 transition-all">{tier === "growth" ? "Growth" : "Basic"}</Badge>
                 </Link>
               ) : (
                 <Badge variant={tier === "growth" ? "accent" : "default"}>{tier === "growth" ? "Growth" : "Basic"}</Badge>
               )}
-              
               <Link href="/settings" className="flex items-center gap-3 group active:scale-95 transition-all">
                 <div className="hidden text-right sm:block group-hover:opacity-80 transition-opacity">
                   <p className="text-sm font-medium">{userEmail}</p>
                   <p className="text-xs text-muted-foreground">Signed in</p>
                 </div>
                 <Avatar className="h-11 w-11 border border-border group-hover:border-accent/40 shadow-sm transition-all text-sm font-medium">
-                  <AvatarFallback>{userEmail.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{avatarText}</AvatarFallback>
                 </Avatar>
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="mobile-safe flex-1 px-4 py-5 pb-32 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        {/* pb-[calc(env(safe-area-inset-bottom)+8rem)] ensures content clears the bottom nav + safe area on all devices */}
+        <main className="mobile-safe flex-1 px-4 py-5 pb-[calc(env(safe-area-inset-bottom)+8rem)] sm:px-6 lg:px-8 lg:py-8 lg:pb-8">{children}</main>
 
-        {/* Pull-to-refresh (mobile only) */}
         <PullToRefresh />
 
 
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">
-            {navItems.slice(0, 4).map((item) => {
+            {bottomNavItems.map((item) => {
               const active = pathname.startsWith(item.href);
               return (
                 <Link

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/shared/app-toaster";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import NextTopLoader from "nextjs-toploader";
 import { ThemeInitScript } from "@/components/shared/theme-picker";
+import { SplashScreen } from "@/components/shared/splash-screen";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,13 +57,13 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icon.svg",
-    apple: "/apple-icon.svg",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0A",
+  themeColor: "#16181d",
   colorScheme: "dark",
   viewportFit: "cover",
 };
@@ -75,19 +76,19 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "RepCore",
-    "operatingSystem": "Android, iOS, Windows, macOS",
-    "applicationCategory": "BusinessApplication, HealthApplication",
-    "aggregateRating": {
+    name: "RepCore",
+    operatingSystem: "Android, iOS, Windows, macOS",
+    applicationCategory: "BusinessApplication, HealthApplication",
+    aggregateRating: {
       "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "120"
+      ratingValue: "4.9",
+      ratingCount: "120",
     },
-    "offers": {
+    offers: {
       "@type": "Offer",
-      "price": "0.00",
-      "priceCurrency": "INR"
-    }
+      price: "0.00",
+      priceCurrency: "INR",
+    },
   };
 
   return (
@@ -98,9 +99,14 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-startup-image" href="/icon.png" />
       </head>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
-        <NextTopLoader color="#FF0000" showSpinner={false} shadow="0 0 10px #FF0000, 0 0 5px #FF0000" />
+        <SplashScreen />
+        <NextTopLoader color="var(--accent, #2563eb)" showSpinner={false} shadow="0 0 10px var(--accent, #2563eb), 0 0 5px var(--accent, #2563eb)" />
         <PwaRegister />
         {children}
         <Toaster />

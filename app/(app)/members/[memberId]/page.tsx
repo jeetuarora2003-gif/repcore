@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   freezeSubscriptionAction,
   renewSubscriptionAction,
@@ -19,9 +19,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { DigitalIdCard } from "@/components/members/digital-id-card";
+import { MemberTabs } from "@/components/members/member-tabs";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { renderReminderTemplate } from "@/lib/utils/reminders";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
@@ -29,14 +29,22 @@ import { QrCode, Share2 } from "lucide-react";
 
 export default async function MemberDetailPage({
   params,
+  searchParams,
 }: {
-  params: { memberId: string };
+  params: Promise<{ memberId: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const session = await getSessionContext();
+  if (!session.gym) redirect("/setup");
+
+  const { memberId } = await params;
+  const { tab } = await searchParams;
+  const activeTab = tab === "billing" || tab === "activity" ? tab : "overview";
+
   const [member, plans, templates] = await Promise.all([
-    getMemberDetailData(session.gym!.id, params.memberId, session.settings?.expiring_warning_days ?? 7),
-    getMembershipPlans(session.gym!.id),
-    getReminderTemplates(session.gym!.id),
+    getMemberDetailData(session.gym.id, memberId, session.settings?.expiring_warning_days ?? 7),
+    getMembershipPlans(session.gym.id),
+    getReminderTemplates(session.gym.id),
   ]);
 
   if (!member) notFound();
@@ -47,8 +55,8 @@ export default async function MemberDetailPage({
 
   const message = renderReminderTemplate(expiryTemplate, {
     name: member.members.full_name,
-    gymName: session.gym!.name,
-    phone: session.gym!.phone,
+    gymName: session.gym.name,
+    phone: session.gym.phone,
     date: member.currentSubscription?.effective_end_date,
   });
   const whatsappUrl = buildWhatsAppUrl(member.members.phone, message);
