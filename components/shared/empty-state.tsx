@@ -1,15 +1,14 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function EmptyState({
-  icon: Icon,
+  icon,
   title,
   body,
   action,
 }: {
-  icon: LucideIcon;
+  icon: React.ReactNode;
   title: string;
   body: string;
   action?: React.ReactNode;
@@ -32,7 +31,7 @@ export function EmptyState({
       <div className="relative flex items-center justify-center">
         <div className="absolute h-20 w-20 animate-ping rounded-full bg-accent/10" />
         <div className="relative rounded-3xl bg-accent/10 p-5 text-accent">
-          <Icon className="h-8 w-8" />
+          {icon}
         </div>
       </div>
 
