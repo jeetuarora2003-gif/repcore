@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { ThemePicker } from "@/components/shared/theme-picker";
 import { BiometricSettings } from "@/components/attendance/biometric-settings";
+import { formatCurrency } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
 
@@ -53,11 +54,11 @@ export default async function SettingsPage() {
         <CardHeader><CardTitle>Gym profile</CardTitle></CardHeader>
         <CardContent>
           <form action={updateGymProfileAction} className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2"><Label htmlFor="name">Gym name</Label><Input id="name" name="name" defaultValue={session.gym.name ?? ""} required /></div>
-            <div className="space-y-2"><Label htmlFor="phone">Phone</Label><Input id="phone" name="phone" defaultValue={session.gym.phone ?? ""} required /></div>
-            <div className="space-y-2 sm:col-span-2"><Label htmlFor="address">Address</Label><Input id="address" name="address" defaultValue={session.gym.address ?? ""} /></div>
-            <div className="space-y-4 sm:col-span-2"><ImageUpload bucket="gym_logos" name="logoUrl" label="Gym Logo" defaultValue={session.gym.logo_url ?? ""} /></div>
-            <div className="space-y-2"><Label htmlFor="gstNumber">GST number</Label><Input id="gstNumber" name="gstNumber" defaultValue={session.gym.gst_number ?? ""} /></div>
+            <div className="space-y-2"><Label htmlFor="name">Gym name</Label><Input id="name" name="name" defaultValue={session.gym!.name ?? ""} required /></div>
+            <div className="space-y-2"><Label htmlFor="phone">Phone</Label><Input id="phone" name="phone" defaultValue={session.gym!.phone ?? ""} required /></div>
+            <div className="space-y-2 sm:col-span-2"><Label htmlFor="address">Address</Label><Input id="address" name="address" defaultValue={session.gym!.address ?? ""} /></div>
+            <div className="space-y-4 sm:col-span-2"><ImageUpload bucket="gym_logos" name="logoUrl" label="Gym Logo" defaultValue={session.gym!.logo_url ?? ""} /></div>
+            <div className="space-y-2"><Label htmlFor="gstNumber">GST number</Label><Input id="gstNumber" name="gstNumber" defaultValue={session.gym!.gst_number ?? ""} /></div>
             <div className="sm:col-span-2"><Button type="submit">Save profile</Button></div>
           </form>
         </CardContent>

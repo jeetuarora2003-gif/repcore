@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate, formatRelativeDate } from "@/lib/utils/format";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ function SourceIcon({ source }: { source?: string }) {
   );
 }
 
-export default async function AttendancePage() {
+export default async function AttendancePage({ searchParams }: { searchParams: Promise<{ date?: string, error?: string }> }) {
   const session = await getSessionContext();
   const searchParamsObj = await searchParams;
   const selectedDate = searchParamsObj.date ?? format(new Date(), "yyyy-MM-dd");
