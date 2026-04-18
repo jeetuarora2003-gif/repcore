@@ -126,7 +126,10 @@ export async function forgotPasswordAction(formData: FormData) {
   });
 
   const supabase = createSupabaseServerClient();
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`;
+  const { siteUrl } = getSupabaseEnv();
+  
+  // Use the auth confirmation route to handle PKCE/Token exchange correctly
+  const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
     redirectTo,

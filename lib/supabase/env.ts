@@ -18,6 +18,7 @@ function normalizeEnvValue(value?: string) {
 export function getSupabaseEnv() {
   const url = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const siteUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL) || "http://localhost:3000";
 
   if (!url || !anonKey) {
     throw new Error(
@@ -25,5 +26,5 @@ export function getSupabaseEnv() {
     );
   }
 
-  return { url, anonKey };
+  return { url, anonKey, siteUrl };
 }
