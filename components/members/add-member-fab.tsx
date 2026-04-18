@@ -1,14 +1,21 @@
 "use client";
 
-import { UserPlus } from "lucide-react";
-import { AddMemberWizard } from "@/components/members/add-member-wizard";
-import type { MembershipPlanRecord } from "@/lib/db/queries";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
+
+// Lazy load the heavy wizard component
+const AddMemberWizard = dynamic(
+  () => import("@/components/members/add-member-wizard").then((mod) => mod.AddMemberWizard),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-accent flex items-center justify-center shadow-glow">
+        <Loader2 className="h-6 w-6 animate-spin text-white" />
+      </div>
+    )
+  }
+);
 
 export function AddMemberFab({ plans }: { plans: any[] }) {
-  // We use the existing AddMemberWizard which already has a Dialog trigger.
-  // Actually, wait, AddMemberWizard has the trigger built-in.
-  // We will just render AddMemberWizard here, but this file is meant to house the FAB.
-  // Since AddMemberWizard has the trigger built-in, we can just use AddMemberWizard,
-  // but let's make sure the trigger in AddMemberWizard matches the design.
   return <AddMemberWizard plans={plans} />;
 }

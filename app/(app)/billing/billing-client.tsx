@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
-import { RecordPaymentForm } from "@/components/billing/record-payment-form";
+import dynamic from "next/dynamic";
+const RecordPaymentForm = dynamic(
+  () => import("@/components/billing/record-payment-form").then((mod) => mod.RecordPaymentForm),
+  { ssr: false }
+);
 import { applyCreditAction } from "@/lib/actions";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
