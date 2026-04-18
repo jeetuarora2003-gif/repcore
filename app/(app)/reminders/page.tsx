@@ -12,6 +12,7 @@ import { buildReminderMessage } from "@/lib/utils/reminders";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import type { ReminderPipelineMember } from "@/lib/db/queries";
+import { MemberAvatar } from "@/components/shared/member-avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -107,9 +108,12 @@ export default async function RemindersPage() {
                   <Card key={member.membershipId}>
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{member.memberName}</p>
-                          <p className="mt-0.5 text-sm text-muted-foreground truncate">{member.memberPhone}</p>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <MemberAvatar name={member.memberName} photoUrl={member.photoUrl} status={bucket.stage === 1 ? "expired" : "expiring_soon"} />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{member.memberName}</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground truncate">{member.memberPhone}</p>
+                          </div>
                         </div>
                         <Badge className={bucket.badgeColor}>{bucket.label}</Badge>
                       </div>

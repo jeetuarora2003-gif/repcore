@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate, formatRelativeDate } from "@/lib/utils/format";
 import { EmptyState } from "@/components/shared/empty-state";
+import { MemberAvatar } from "@/components/shared/member-avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -175,16 +176,21 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                   key={entry.id}
                   className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.03] px-4 py-3"
                 >
-                  <SourceIcon source={entry.source} />
+                  <MemberAvatar 
+                    name={membership?.members.full_name ?? "Unknown"} 
+                    photoUrl={membership?.members.photo_url} 
+                    status="active" // Daily attendance members are active logically for the day
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       {membership?.members.full_name ?? entry.membership_id}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-muted-foreground flex items-center gap-1.5">
+                      <SourceIcon source={entry.source} />
                       {formatDate(entry.checked_in_at, "hh:mm a")}
                       {entry.source && entry.source !== "manual" ? (
-                        <span className="ml-2 text-accent/70">
-                          {entry.source === "biometric_push" ? "device push" : "file import"}
+                        <span className="ml-1 text-accent/70">
+                          ({entry.source === "biometric_push" ? "device push" : "file import"})
                         </span>
                       ) : null}
                     </p>

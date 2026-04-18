@@ -78,11 +78,11 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
     >
       <DialogTrigger asChild>
         <button
-          className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_4px_20px_rgba(0,0,0,0.4)] active:scale-90 transition-all duration-200 lg:static lg:h-10 lg:w-auto lg:px-4 lg:py-2 lg:text-sm lg:font-medium lg:shadow-none lg:rounded-xl"
+          className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-40 flex h-14 w-14 lg:h-auto lg:w-auto lg:px-5 lg:py-3.5 items-center justify-center rounded-2xl lg:rounded-full bg-accent text-white shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] hover:-translate-y-1 active:scale-95 transition-all duration-300"
           title="Add Member"
         >
-          <UserPlus className="h-6 w-6 lg:mr-2 lg:h-4 lg:w-4" />
-          <span className="hidden lg:inline">Add Member</span>
+          <UserPlus className="h-6 w-6 lg:mr-2.5 lg:h-5 lg:w-5" />
+          <span className="hidden lg:inline font-semibold">New Member</span>
         </button>
       </DialogTrigger>
 
