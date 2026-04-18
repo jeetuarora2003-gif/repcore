@@ -449,19 +449,19 @@ export async function getBillingPageData(gymId: string) {
     supabase.from("v_membership_credit_balances").select("*").eq("gym_id", gymId),
     supabase
       .from("memberships")
-      .select("id, member_id, archived_at, members!inner(id, full_name, phone)")
+      .select("id, member_id, archived_at, members!inner(id, full_name, phone, photo_url)")
       .eq("gym_id", gymId)
       .is("archived_at", null),
     supabase
       .from("payments")
-      .select("id, amount_paise, received_on, status")
+      .select("id, amount_paise, received_on, status, created_at, method, membership_id")
       .eq("gym_id", gymId)
       .eq("status", "recorded")
-      .order("received_on", { ascending: false }),
+      .order("created_at", { ascending: false }),
   ]);
 
   const allInvoices = (invoiceResponse.data as InvoiceBalance[]) ?? [];
-  const allPayments = (rawPaymentsResponse.data as Pick<PaymentRecord, "id" | "amount_paise" | "received_on" | "status">[]) ?? [];
+  const allPayments = (rawPaymentsResponse.data as (Pick<PaymentRecord, "id" | "amount_paise" | "received_on" | "status" | "created_at" | "method" | "membership_id"> & { method: string, created_at: string, membership_id: string })[]) ?? [];
 
   // Financial overview — computed from fetched data, zero extra round-trips
   const today = startOfDay(new Date());
@@ -498,9 +498,15 @@ export async function getBillingPageData(gymId: string) {
     monthlyBreakdown.push({ month: label, revenue: rev });
   }
 
+  // Calculate today vs yesterday revenue
+  const formatter = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kolkata", dateStyle: "short", timeStyle: "medium", hour12: false });
+  // Just use regular date-fns for now since we just need simple metrics.
+  // We'll compute raw data and return it to page.tsx
+  const paymentsWithDetails = allPayments;
+
   return {
     invoices: allInvoices,
-    payments: (paymentResponse.data as PaymentBalanceRecord[]) ?? [],
+    payments: paymentsWithDetails,
     credits: (creditResponse.data as MembershipCreditBalanceRecord[]) ?? [],
     memberships: ((membershipsResponse.data as MembershipLookupRow[] | null) ?? []).map(normalizeMembershipLookupRow),
     financialOverview: {
