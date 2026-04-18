@@ -4,8 +4,10 @@ import { useState, useCallback } from "react";
 import { Upload, CheckCircle2, AlertTriangle, Fingerprint, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { parseFileRows, importBiometricFileAction } from "@/lib/actions/attendance-upload";
-import type { ColumnMapping, UploadResult } from "@/lib/actions/attendance-upload";
+import { importBiometricFileAction } from "@/lib/actions/attendance-upload";
+import type { UploadResult } from "@/lib/actions/attendance-upload";
+import { parseFileRows } from "@/lib/utils/attendance-parser";
+import type { ColumnMapping } from "@/lib/utils/attendance-parser";
 
 type FileMapperProps = {
   onComplete?: (result: UploadResult) => void;
