@@ -1,7 +1,9 @@
+import { markReminderPaidAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getReminderTemplates } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { WhatsappButton } from "@/components/shared/whatsapp-button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
@@ -19,7 +21,11 @@ export default async function RemindersPage() {
     templates.find((template) => template.template_type === "membership_expiry")?.body ??
     "Hi [Name], your membership at [Gym Name] expires on [Date]. Please renew to continue. Contact: [Phone]";
 
-  const dueMembers = members.filter((member) => member.duePaise > 0 || member.status === "expiring_soon");
+  const dueMembers = members.filter(
+    (member) =>
+      !member.archived_at &&
+      (member.duePaise > 0 || (member.status === "expiring_soon" && !member.scheduledSubscription))
+  );
 
   return (
     <div className="space-y-6">
@@ -59,7 +65,7 @@ export default async function RemindersPage() {
                 <p className="mt-3 text-sm text-muted-foreground">
                   {member.currentSubscription ? `Expires ${formatDate(member.currentSubscription.effective_end_date)}` : "No live subscription"} - Due {formatCurrency(member.duePaise)}
                 </p>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap gap-3">
                   <WhatsappButton
                     membershipId={member.id}
                     subscriptionId={member.currentSubscription?.subscription_id}
@@ -70,6 +76,15 @@ export default async function RemindersPage() {
                   >
                     Send on WhatsApp
                   </WhatsappButton>
+                  
+                  {member.duePaise > 0 && (
+                    <form action={markReminderPaidAction}>
+                      <input type="hidden" name="membershipId" value={member.id} />
+                      <Button type="submit" variant="outline" size="sm">
+                        Mark as Paid ({formatCurrency(member.duePaise)})
+                      </Button>
+                    </form>
+                  )}
                 </div>
               </div>
             );

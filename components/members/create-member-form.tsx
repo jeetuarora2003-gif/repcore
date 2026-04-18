@@ -58,6 +58,21 @@ export function CreateMemberForm({ plans }: { plans: Plan[] }) {
         <Label htmlFor="startDate">Start date</Label>
         <Input id="startDate" name="startDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} disabled={isPending} />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="biometricDeviceId">
+          Device Enrollment ID{" "}
+          <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="biometricDeviceId"
+          name="biometricDeviceId"
+          placeholder="e.g. 007"
+          disabled={isPending}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          The number assigned in your fingerprint/face device. Needed only if you use biometric attendance.
+        </p>
+      </div>
       <div className="sm:col-span-2 xl:col-span-1">
         <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" />
       </div>

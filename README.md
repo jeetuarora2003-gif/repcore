@@ -10,8 +10,9 @@ RepCore is a mobile-first gym management SaaS for independent Indian gyms. It is
 - Member lifecycle support: joins, renewals, rejoin, freeze, archive
 - Billing model with invoices, partial payments, allocations, overpayment credit, and invoice correction
 - Manual WhatsApp reminders for Basic and upgrade path for Growth automation
-- Attendance logging with one check-in per member per day
+- Attendance logging with one check-in per member per day. Hardware integration with ZKTeco ADMS via push webhooks and file-based parser.
 - PWA-ready with manifest and service worker
+- Suspense-compatible skeleton loaders and error boundaries for a high-performance experience
 
 ## Stack
 
@@ -131,4 +132,4 @@ supabase/migrations/    Database schema and RPC migrations
 
 ## Status
 
-RepCore V1 is build-clean and ready to connect to a live Supabase project.
+RepCore V1 is build-clean and stable. Recent enhancements include a unified Add Member wizard, a comprehensive real-time financial dashboard embedded within the billing page, scalable biometric attendance processing, and dynamic loading UI. Ready for production deployment!

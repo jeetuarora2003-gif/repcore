@@ -266,9 +266,13 @@ export async function createMembershipSaleAction(formData: FormData) {
     planId: asString(formData.get("planId")),
     startDate: asString(formData.get("startDate")),
     saleReason: asString(formData.get("saleReason")) || "new_join",
+    paidAmountRupees: asString(formData.get("paidAmountRupees")),
+    paymentMethod: asString(formData.get("paymentMethod")),
+    paymentReference: asString(formData.get("paymentReference")),
   });
+  const biometricDeviceId = asString(formData.get("biometricDeviceId")) || null;
 
-  const { error } = await createMembershipSaleRpc(supabase, {
+  const { data: rpcData, error } = await createMembershipSaleRpc(supabase, {
     gymId: session.gym!.id,
     existingMemberId: values.existingMemberId,
     fullName: values.fullName,
@@ -281,6 +285,35 @@ export async function createMembershipSaleAction(formData: FormData) {
   });
 
   assertSupabaseSuccess(error);
+
+  // Set biometric device ID on the member row if provided
+  if (biometricDeviceId && rpcData?.member_id) {
+    await supabase
+      .from("members")
+      .update({ biometric_device_id: biometricDeviceId })
+      .eq("gym_id", session.gym!.id)
+      .eq("id", rpcData.member_id);
+  }
+
+  if (values.paidAmountRupees > 0 && rpcData?.invoice_id && rpcData?.membership_id) {
+    const { error: paymentError } = await recordPaymentAndAllocateRpc(supabase, {
+      gymId: session.gym!.id,
+      membershipId: rpcData.membership_id,
+      amountPaise: toPaise(values.paidAmountRupees),
+      method: values.paymentMethod,
+      receivedOn: new Date().toISOString(),
+      allocations: [
+        {
+          invoiceId: rpcData.invoice_id,
+          amountPaise: toPaise(values.paidAmountRupees),
+        },
+      ],
+      referenceCode: values.paymentReference || undefined,
+      note: "Initial payment during sign up",
+    });
+    assertSupabaseSuccess(paymentError);
+  }
+
   revalidatePath("/members");
   revalidatePath("/subscriptions");
   revalidatePath("/dashboard");
@@ -577,4 +610,43 @@ export async function logManualReminderAction(payload: {
   assertSupabaseSuccess(error);
   revalidatePath("/reminders");
   revalidatePath("/members");
+}
+
+export async function markReminderPaidAction(formData: FormData) {
+  const session = await requireGymContext();
+  const supabase = createSupabaseServerClient();
+  const membershipId = asString(formData.get("membershipId"));
+
+  if (!membershipId) return;
+
+  const { data: openInvoices } = await supabase
+    .from("v_invoice_balances")
+    .select("invoice_id, amount_due_paise")
+    .eq("gym_id", session.gym!.id)
+    .eq("membership_id", membershipId)
+    .gt("amount_due_paise", 0)
+    .neq("derived_status", "voided");
+
+  const totalDuePaise = (openInvoices || []).reduce((sum, inv) => sum + inv.amount_due_paise, 0);
+
+  if (totalDuePaise > 0) {
+    const { error } = await recordPaymentAndAllocateRpc(supabase, {
+      gymId: session.gym!.id,
+      membershipId,
+      amountPaise: totalDuePaise,
+      method: "cash",
+      receivedOn: new Date().toISOString(),
+      allocations: (openInvoices || []).map((inv) => ({
+        invoiceId: inv.invoice_id,
+        amountPaise: inv.amount_due_paise,
+      })),
+      note: "Marked as already paid from reminders",
+    });
+
+    assertSupabaseSuccess(error);
+  }
+
+  revalidatePath("/reminders");
+  revalidatePath("/members");
+  revalidatePath("/billing");
 }

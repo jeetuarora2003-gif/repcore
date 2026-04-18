@@ -12,7 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PullToRefresh } from "@/components/shared/pull-to-refresh";
-import { Plus } from "lucide-react";
+import { Logo } from "@/components/shared/logo";
+
 
 type AppShellProps = {
   gymName: string;
@@ -29,11 +30,11 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="hidden border-r border-border bg-black/30 px-4 py-6 lg:flex lg:flex-col">
-        <div className="panel-muted flex items-center gap-3 px-4 py-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/15 text-lg font-semibold text-accent">RC</div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{gymName}</p>
-            <p className="text-xs text-muted-foreground">RepCore {tier === "growth" ? "Growth" : "Basic"}</p>
+        <div className="panel-muted flex items-center gap-3 px-4 py-3">
+          <Logo size="sm" />
+          <div className="ml-auto">
+            <p className="text-[10px] font-medium text-muted-foreground">RepCore {tier === "growth" ? "Growth" : "Basic"}</p>
+            <p className="truncate text-xs font-semibold text-foreground">{gymName}</p>
           </div>
         </div>
 
@@ -131,15 +132,6 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
         {/* Pull-to-refresh (mobile only) */}
         <PullToRefresh />
 
-        {/* FAB — quick add member */}
-        <Link
-          href="/members"
-          className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_4px_20px_rgba(0,0,0,0.4)] active:scale-90 transition-all duration-200 lg:hidden"
-          style={{ boxShadow: "0 4px 20px var(--accent, #2563eb)55" }}
-          aria-label="Add member"
-        >
-          <Plus className="h-6 w-6" />
-        </Link>
 
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/85 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-lg lg:hidden">
           <div className="grid grid-cols-4 gap-2">

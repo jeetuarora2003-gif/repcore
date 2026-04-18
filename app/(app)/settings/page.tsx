@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { updateGymProfileAction, updateGymSettingsAction, updateReminderTemplateAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
-import { getSettingsPageData } from "@/lib/db/queries";
+import { getSettingsPageData, getBiometricSettingsData, getMembersPageData } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { ThemePicker } from "@/components/shared/theme-picker";
+import { BiometricSettings } from "@/components/attendance/biometric-settings";
+
+export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const session = await getSessionContext();
@@ -21,7 +25,25 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const data = await getSettingsPageData(session.gym!.id);
+  const headersList = headers();
+  const host = headersList.get("host") ?? "";
+  const proto = headersList.get("x-forwarded-proto") ?? "https";
+  const domain = `${proto}://${host}`;
+
+  const [data, biometricData, membersData] = await Promise.all([
+    getSettingsPageData(session.gym!.id),
+    getBiometricSettingsData(session.gym!.id),
+    getMembersPageData(session.gym!.id, session.settings?.expiring_warning_days ?? 7),
+  ]);
+
+  const memberOptions = membersData
+    .filter((m) => !m.archived_at)
+    .map((m) => ({
+      membershipId: m.id,
+      memberId: m.member_id,
+      fullName: m.members.full_name,
+      phone: m.members.phone,
+    }));
 
   return (
     <div className="space-y-6">
@@ -181,6 +203,24 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemePicker />
+        </CardContent>
+      </Card>
+      {/* Biometric Device */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Biometric Device</CardTitle>
+          <CardDescription>
+            Connect a fingerprint or face recognition device to auto-sync attendance.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BiometricSettings
+            biometricToken={biometricData.biometricToken}
+            lastBiometricPush={biometricData.lastBiometricPush}
+            unmatchedLogs={biometricData.unmatchedLogs}
+            members={memberOptions}
+            domain={domain}
+          />
         </CardContent>
       </Card>
     </div>

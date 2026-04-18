@@ -43,6 +43,9 @@ export const membershipSaleSchema = memberProfileSchema.extend({
   planId: z.string().uuid(),
   startDate: z.string().min(1),
   saleReason: z.enum(["new_join", "rejoin"]).default("new_join"),
+  paidAmountRupees: z.coerce.number().nonnegative().optional().default(0),
+  paymentMethod: z.enum(["cash", "upi", "card", "bank_transfer", "other"]).optional().default("cash"),
+  paymentReference: z.string().optional().default(""),
 });
 
 export const renewSubscriptionSchema = z.object({

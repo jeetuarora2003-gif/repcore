@@ -83,6 +83,7 @@ type AttendanceRecord = {
   membership_id: string;
   check_in_date: string;
   checked_in_at: string;
+  source?: string;
   created_at: string;
 };
 
@@ -434,7 +435,7 @@ export async function getMemberDetailData(gymId: string, memberId: string, warni
 
 export async function getBillingPageData(gymId: string) {
   const supabase = createSupabaseServerClient();
-  const [invoiceResponse, paymentResponse, creditResponse, membershipsResponse] = await Promise.all([
+  const [invoiceResponse, paymentResponse, creditResponse, membershipsResponse, rawPaymentsResponse] = await Promise.all([
     supabase.from("v_invoice_balances").select("*").eq("gym_id", gymId).order("issued_on", { ascending: false }),
     supabase.from("v_payment_balances").select("*").eq("gym_id", gymId),
     supabase.from("v_membership_credit_balances").select("*").eq("gym_id", gymId),
@@ -443,22 +444,73 @@ export async function getBillingPageData(gymId: string) {
       .select("id, member_id, archived_at, members!inner(id, full_name, phone)")
       .eq("gym_id", gymId)
       .is("archived_at", null),
+    supabase
+      .from("payments")
+      .select("id, amount_paise, received_on, status")
+      .eq("gym_id", gymId)
+      .eq("status", "recorded")
+      .order("received_on", { ascending: false }),
   ]);
 
+  const allInvoices = (invoiceResponse.data as InvoiceBalance[]) ?? [];
+  const allPayments = (rawPaymentsResponse.data as Pick<PaymentRecord, "id" | "amount_paise" | "received_on" | "status">[]) ?? [];
+
+  // Financial overview — computed from fetched data, zero extra round-trips
+  const today = startOfDay(new Date());
+  const monthStart = startOfMonth(today);
+  const monthEnd = endOfMonth(today);
+
+  const monthlyRevenue = allPayments
+    .filter((p) => {
+      const d = parseISO(p.received_on);
+      return !isBefore(d, monthStart) && !isAfter(d, monthEnd);
+    })
+    .reduce((sum, p) => sum + p.amount_paise, 0);
+
+  const totalCollected = allPayments.reduce((sum, p) => sum + p.amount_paise, 0);
+  const totalPendingDues = allInvoices
+    .filter((inv) => inv.derived_status !== "paid" && inv.derived_status !== "voided")
+    .reduce((sum, inv) => sum + inv.amount_due_paise, 0);
+  const openInvoiceCount = allInvoices.filter((inv) => inv.derived_status !== "paid" && inv.derived_status !== "voided").length;
+
+  // Last 6 months revenue bars
+  const monthlyBreakdown: { month: string; revenue: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const ms = startOfMonth(d);
+    const me = endOfMonth(d);
+    const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
+    const rev = allPayments
+      .filter((p) => {
+        const r = parseISO(p.received_on);
+        return !isBefore(r, ms) && !isAfter(r, me);
+      })
+      .reduce((sum, p) => sum + p.amount_paise, 0);
+    monthlyBreakdown.push({ month: label, revenue: rev });
+  }
+
   return {
-    invoices: (invoiceResponse.data as InvoiceBalance[]) ?? [],
+    invoices: allInvoices,
     payments: (paymentResponse.data as PaymentBalanceRecord[]) ?? [],
     credits: (creditResponse.data as MembershipCreditBalanceRecord[]) ?? [],
     memberships: ((membershipsResponse.data as MembershipLookupRow[] | null) ?? []).map(normalizeMembershipLookupRow),
+    financialOverview: {
+      monthlyRevenue,
+      totalCollected,
+      totalPendingDues,
+      openInvoiceCount,
+      monthlyBreakdown,
+    },
   };
 }
 
 export async function getAttendancePageData(gymId: string, date: string) {
   const supabase = createSupabaseServerClient();
-  const [attendanceResponse, membershipsResponse] = await Promise.all([
+  const [attendanceResponse, membershipsResponse, lastPushResponse, unmatchedCountResponse] = await Promise.all([
     supabase
       .from("attendance_logs")
-      .select("id, membership_id, check_in_date, checked_in_at, created_at")
+      .select("id, membership_id, check_in_date, checked_in_at, source, created_at")
       .eq("gym_id", gymId)
       .eq("check_in_date", date)
       .order("checked_in_at", { ascending: false }),
@@ -467,11 +519,58 @@ export async function getAttendancePageData(gymId: string, date: string) {
       .select("id, member_id, archived_at, members!inner(id, full_name, phone)")
       .eq("gym_id", gymId)
       .is("archived_at", null),
+    // Most recent biometric push for live-sync status pill
+    supabase
+      .from("attendance_logs")
+      .select("created_at")
+      .eq("gym_id", gymId)
+      .eq("source", "biometric_push")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Count of unmatched device IDs for banner
+    supabase
+      .from("biometric_unmatched_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("gym_id", gymId),
   ]);
 
   return {
     attendance: (attendanceResponse.data as AttendanceRecord[]) ?? [],
     memberships: ((membershipsResponse.data as MembershipLookupRow[] | null) ?? []).map(normalizeMembershipLookupRow),
+    lastBiometricPush: (lastPushResponse.data as { created_at: string } | null)?.created_at ?? null,
+    unmatchedCount: unmatchedCountResponse.count ?? 0,
+  };
+}
+
+export async function getBiometricSettingsData(gymId: string) {
+  const supabase = createSupabaseServerClient();
+  const [gymResponse, lastPushResponse, unmatchedResponse] = await Promise.all([
+    supabase
+      .from("gyms")
+      .select("biometric_token")
+      .eq("id", gymId)
+      .single(),
+    supabase
+      .from("attendance_logs")
+      .select("created_at")
+      .eq("gym_id", gymId)
+      .eq("source", "biometric_push")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("biometric_unmatched_logs")
+      .select("id, raw_device_user_id, raw_datetime, created_at")
+      .eq("gym_id", gymId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+
+  return {
+    biometricToken: (gymResponse.data as { biometric_token: string | null } | null)?.biometric_token ?? null,
+    lastBiometricPush: (lastPushResponse.data as { created_at: string } | null)?.created_at ?? null,
+    unmatchedLogs: (unmatchedResponse.data ?? []) as Array<{ id: string; raw_device_user_id: string; raw_datetime: string; created_at: string }>,
   };
 }
 

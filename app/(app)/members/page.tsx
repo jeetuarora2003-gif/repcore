@@ -1,15 +1,13 @@
 import Link from "next/link";
-import { Search, UserPlus, UsersRound } from "lucide-react";
-import { CreateMemberForm } from "@/components/members/create-member-form";
+import { Search, UsersRound } from "lucide-react";
+import { AddMemberWizard } from "@/components/members/add-member-wizard";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getMembershipPlans } from "@/lib/db/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ImageUpload } from "@/components/shared/image-upload";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 
@@ -28,14 +26,7 @@ export default async function MembersPage({
     <div className="space-y-6">
       <PageHeader title="Members" description="Manage joins, renewals, archives, and member status from one place." />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add member</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CreateMemberForm plans={plans} />
-        </CardContent>
-      </Card>
+      <AddMemberWizard plans={plans} />
 
       <Card>
         <CardContent className="pt-5">

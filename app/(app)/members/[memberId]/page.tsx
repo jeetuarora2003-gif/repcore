@@ -4,6 +4,9 @@ import {
   freezeSubscriptionAction,
   renewSubscriptionAction,
   updateMemberProfileAction,
+  recordPaymentAction,
+  applyCreditAction,
+  correctInvoiceAction,
 } from "@/lib/actions";
 import { ArchiveMemberButton } from "@/components/members/archive-member-button";
 import { getSessionContext } from "@/lib/auth/session";
@@ -39,7 +42,7 @@ export default async function MemberDetailPage({
   if (!member) notFound();
 
   const expiryTemplate =
-    templates.find((template) => template.template_type === "membership_expiry")?.body ??
+    templates.find((t) => t.template_type === "membership_expiry")?.body ??
     "Hi [Name], your membership at [Gym Name] expires on [Date]. Please renew to continue. Contact: [Phone]";
 
   const message = renderReminderTemplate(expiryTemplate, {
@@ -50,11 +53,14 @@ export default async function MemberDetailPage({
   });
   const whatsappUrl = buildWhatsAppUrl(member.members.phone, message);
 
+  // Helpers for billing tab
+  const openInvoices = member.invoices.filter((i) => i.amount_due_paise > 0);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={member.members.full_name}
-        description={`${member.members.phone} - ${member.status.replaceAll("_", " ")}`}
+        description={`${member.members.phone} — ${member.status.replaceAll("_", " ")}`}
         actions={
           <>
             <Button asChild variant="outline">
@@ -80,9 +86,10 @@ export default async function MemberDetailPage({
           <TabsTrigger value="activity" className="rounded-xl data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-glow">Activity</TabsTrigger>
         </TabsList>
 
+        {/* ─────────────────────── OVERVIEW TAB ─────────────────────── */}
         <TabsContent value="overview" className="space-y-6 mt-6">
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            {/* Existing Profile Card */}
+            {/* Profile edit card */}
             <Card>
               <CardHeader>
                 <CardTitle>Profile</CardTitle>
@@ -99,11 +106,11 @@ export default async function MemberDetailPage({
                     <Input id="phone" name="phone" defaultValue={member.members.phone} required />
                   </div>
                   <div className="sm:col-span-2">
-                    <ImageUpload 
-                      bucket="member_photos" 
-                      name="photoUrl" 
-                      label="Member Photo" 
-                      defaultValue={member.members.photo_url ?? ""} 
+                    <ImageUpload
+                      bucket="member_photos"
+                      name="photoUrl"
+                      label="Member Photo"
+                      defaultValue={member.members.photo_url ?? ""}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
@@ -121,123 +128,302 @@ export default async function MemberDetailPage({
             </Card>
 
             <div className="space-y-6">
-                <Card className="panel bg-[#050505] overflow-hidden border-none shadow-2xl">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <QrCode className="h-5 w-5 text-accent" />
-                            Digital Identity Card
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="flex justify-center scale-90 sm:scale-100 origin-top">
-                            <DigitalIdCard 
-                                member={{
-                                    fullName: member.members.full_name,
-                                    photoUrl: member.members.photo_url,
-                                    status: member.status,
-                                    expiresAt: member.currentSubscription?.effective_end_date,
-                                    gymName: session.gym!.name,
-                                    gymLogo: session.gym!.logo_url
-                                }} 
-                            />
-                        </div>
-                        
-                        <div className="grid gap-3 p-2 max-w-sm mx-auto">
-                            <Button asChild className="h-12 rounded-2xl bg-accent hover:bg-accent/90">
-                                <a href={`/id/${member.id}`} target="_blank" rel="noopener noreferrer">
-                                    <Share2 className="mr-2 h-4 w-4" />
-                                    Preview & Share ID Card
-                                </a>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+              {/* Digital ID card */}
+              <Card className="panel bg-[#050505] overflow-hidden border-none shadow-2xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <QrCode className="h-5 w-5 text-accent" />
+                    Digital Identity Card
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex justify-center scale-90 sm:scale-100 origin-top">
+                    <DigitalIdCard
+                      member={{
+                        fullName: member.members.full_name,
+                        photoUrl: member.members.photo_url,
+                        status: member.status,
+                        expiresAt: member.currentSubscription?.effective_end_date,
+                        gymName: session.gym!.name,
+                        gymLogo: session.gym!.logo_url,
+                      }}
+                    />
+                  </div>
+                  <div className="grid gap-3 p-2 max-w-sm mx-auto">
+                    <Button asChild className="h-12 rounded-2xl bg-accent hover:bg-accent/90">
+                      <a href={`/id/${member.id}`} target="_blank" rel="noopener noreferrer">
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Preview &amp; Share ID Card
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Attendance History</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {member.attendance.slice(0, 5).map((entry) => (
-                            <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
-                                <p className="font-medium">{formatDate(entry.check_in_date)}</p>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
+              {/* Attendance preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Attendance History</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {member.attendance.slice(0, 5).map((entry) => (
+                    <div key={entry.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                      <p className="font-medium">{formatDate(entry.check_in_date)}</p>
+                    </div>
+                  ))}
+                  {member.attendance.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No attendance logged yet.</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </TabsContent>
 
+        {/* ─────────────────────── BILLING TAB ─────────────────────── */}
         <TabsContent value="billing" className="space-y-6 mt-6">
-            <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Active Subscriptions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="rounded-2xl border border-border bg-white/[0.03] p-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                            <p className="font-medium">{member.currentSubscription?.plan_snapshot_name ?? "No active plan"}</p>
-                            <p className="text-sm text-muted-foreground">
-                                {member.currentSubscription ? `Ends ${formatDate(member.currentSubscription.effective_end_date)}` : "No live subscription"}
-                            </p>
-                            </div>
-                            <Badge variant={member.status === "expired" ? "danger" : member.status === "expiring_soon" ? "warning" : "success"}>
-                            {member.status.replaceAll("_", " ")}
-                            </Badge>
-                        </div>
-                        </div>
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
 
-                        <form action={renewSubscriptionAction} className="grid gap-4">
-                            <input type="hidden" name="membershipId" value={member.id} />
-                            <div className="space-y-2">
-                                <Label htmlFor="planId">Renew with plan</Label>
-                                <select
-                                id="planId"
-                                name="planId"
-                                defaultValue={plans[0]?.id ?? ""}
-                                required
-                                className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                                >
-                                {plans.map((plan) => (
-                                    <option key={plan.id} value={plan.id}>
-                                    {plan.name} ({plan.duration_days} days)
-                                    </option>
-                                ))}
-                                </select>
-                            </div>
-                            <Button type="submit">Renew subscription</Button>
-                        </form>
-                    </CardContent>
-                </Card>
+            {/* ── Left column ── */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Subscription</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="rounded-2xl border border-border bg-white/[0.03] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium">
+                          {member.currentSubscription?.plan_snapshot_name ?? "No active plan"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {member.currentSubscription
+                            ? `Ends ${formatDate(member.currentSubscription.effective_end_date)}`
+                            : "No live subscription"}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          member.status === "expired"
+                            ? "danger"
+                            : member.status === "expiring_soon"
+                            ? "warning"
+                            : "success"
+                        }
+                      >
+                        {member.status.replaceAll("_", " ")}
+                      </Badge>
+                    </div>
+                  </div>
 
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader><CardTitle>Invoices</CardTitle></CardHeader>
-                        <CardContent className="space-y-3">
-                            {member.invoices.map((inv) => (
-                                <div key={inv.invoice_id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
-                                    {inv.invoice_number} - Due {formatCurrency(inv.amount_due_paise)}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle>Recent Payments</CardTitle></CardHeader>
-                        <CardContent className="space-y-3">
-                            {member.payments.map((p) => (
-                                <div key={p.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
-                                    {formatCurrency(p.amount_paise)} on {formatDate(p.received_on)}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </div>
+                  <form action={renewSubscriptionAction} className="grid gap-4">
+                    <input type="hidden" name="membershipId" value={member.id} />
+                    <div className="space-y-2">
+                      <Label htmlFor="renewPlanId">Renew with plan</Label>
+                      <select
+                        id="renewPlanId"
+                        name="planId"
+                        defaultValue={plans[0]?.id ?? ""}
+                        required
+                        className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        {plans.map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name} ({plan.duration_days} days)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button type="submit">Renew subscription</Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Record Payment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={recordPaymentAction} className="grid gap-4">
+                    <input type="hidden" name="membershipId" value={member.id} />
+                    <div className="space-y-2">
+                      <Label htmlFor="amountRupees">Amount (₹)</Label>
+                      <Input id="amountRupees" name="amountRupees" type="number" min="1" required />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="method">Method</Label>
+                        <select
+                          id="method"
+                          name="method"
+                          defaultValue="cash"
+                          className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        >
+                          <option value="cash">Cash</option>
+                          <option value="upi">UPI</option>
+                          <option value="card">Card</option>
+                          <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="receivedOn">Date</Label>
+                        <Input
+                          id="receivedOn"
+                          name="receivedOn"
+                          type="date"
+                          required
+                          defaultValue={new Date().toISOString().slice(0, 10)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payNote">Notes / Reference</Label>
+                      <Input id="payNote" name="note" placeholder="Transaction ID or notes" />
+                    </div>
+                    <Button type="submit">Record payment</Button>
+                  </form>
+                </CardContent>
+              </Card>
             </div>
+
+            {/* ── Right column ── */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoices</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {member.invoices.map((inv) => (
+                    <div
+                      key={inv.invoice_id}
+                      className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{inv.invoice_number}</p>
+                        <Badge variant={inv.amount_due_paise > 0 ? "danger" : "success"}>
+                          {inv.amount_due_paise > 0 ? `Due ${formatCurrency(inv.amount_due_paise)}` : "Paid"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">
+                        Total {formatCurrency(inv.total_amount_paise)} · {formatDate(inv.issued_on)}
+                      </p>
+                    </div>
+                  ))}
+                  {member.invoices.length === 0 && (
+                    <p className="text-sm text-muted-foreground p-2">No invoices found.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Apply Credit</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={applyCreditAction} className="space-y-4">
+                    <input type="hidden" name="membershipId" value={member.id} />
+                    <div className="space-y-2">
+                      <Label htmlFor="creditInvoiceId">Invoice</Label>
+                      <select
+                        id="creditInvoiceId"
+                        name="invoiceId"
+                        defaultValue={openInvoices[0]?.invoice_id ?? ""}
+                        required
+                        className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        {openInvoices.map((inv) => (
+                          <option key={inv.invoice_id} value={inv.invoice_id}>
+                            {inv.invoice_number} — Due {formatCurrency(inv.amount_due_paise)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="creditAmount">Amount to apply (₹)</Label>
+                      <Input id="creditAmount" name="amountRupees" type="number" step="0.01" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="creditNote">Note</Label>
+                      <Input id="creditNote" name="note" placeholder="Applied from membership credit" />
+                    </div>
+                    <Button type="submit" variant="outline" size="sm">Apply credit</Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {session.gymUser?.role === "owner" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Invoice Correction</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form action={correctInvoiceAction} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="invoiceToCorrect">Original invoice</Label>
+                        <select
+                          id="invoiceToCorrect"
+                          name="invoiceId"
+                          required
+                          className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        >
+                          {member.invoices
+                            .filter((i) => i.derived_status !== "voided")
+                            .map((inv) => (
+                              <option key={inv.invoice_id} value={inv.invoice_id}>
+                                {inv.invoice_number} — {formatCurrency(inv.total_amount_paise)}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="replacementAmountRupees">Replacement amount (₹)</Label>
+                        <Input
+                          id="replacementAmountRupees"
+                          name="replacementAmountRupees"
+                          type="number"
+                          step="0.01"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="correctionReason">Reason</Label>
+                        <Input
+                          id="correctionReason"
+                          name="reason"
+                          placeholder="Wrong amount entered"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" variant="outline" size="sm">Correct invoice</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Payments</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {member.payments.map((p) => (
+                    <div key={p.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium">{formatCurrency(p.amount_paise)}</p>
+                        <p className="text-muted-foreground">{formatDate(p.received_on)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {member.payments.length === 0 && (
+                    <p className="text-sm text-muted-foreground p-2">No payments recorded yet.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
+        {/* ─────────────────────── ACTIVITY TAB ─────────────────────── */}
         <TabsContent value="activity" className="space-y-6 mt-6">
           <div className="grid gap-6 xl:grid-cols-2">
             <Card>
@@ -268,11 +454,13 @@ export default async function MemberDetailPage({
               </CardHeader>
               <CardContent className="space-y-3">
                 {member.messages.length ? (
-                  member.messages.map((messageLog) => (
-                    <div key={messageLog.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
-                      <p className="font-medium">{messageLog.channel.replaceAll("_", " ")}</p>
-                      <p className="mt-1 text-muted-foreground">{formatDate(messageLog.created_at, "dd MMM, hh:mm a")}</p>
-                      <p className="mt-3 line-clamp-3 text-foreground/90">{messageLog.rendered_body}</p>
+                  member.messages.map((log) => (
+                    <div key={log.id} className="rounded-2xl border border-border bg-white/[0.03] p-4 text-sm">
+                      <p className="font-medium">{log.channel.replaceAll("_", " ")}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        {formatDate(log.created_at, "dd MMM, hh:mm a")}
+                      </p>
+                      <p className="mt-3 line-clamp-3 text-foreground/90">{log.rendered_body}</p>
                     </div>
                   ))
                 ) : (
