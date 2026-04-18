@@ -47,7 +47,7 @@ export function splitRow(line: string): string[] {
     let inQuote = false;
     let cur = "";
     for (const ch of line) {
-      if (ch === "\""") { inQuote = !inQuote; continue; }
+      if (ch === '"') { inQuote = !inQuote; continue; }
       if (ch === "," && !inQuote) { cols.push(cur); cur = ""; continue; }
       cur += ch;
     }
