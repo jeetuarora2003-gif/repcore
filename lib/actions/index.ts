@@ -130,13 +130,14 @@ export async function forgotPasswordAction(formData: FormData) {
 
     const supabase = createSupabaseServerClient();
     
-    // Live host detection
+    // Use user-provided SITE_URL if available, otherwise fallback to live host detection
     const host = headers().get("host");
     const protocol = host?.includes("localhost") ? "http" : "https";
     const origin = `${protocol}://${host}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
     
-    // Use the auth confirmation route to handle PKCE/Token exchange correctly
-    const redirectTo = `${origin}/auth/confirm?next=/reset-password`;
+    // Secure redirection via confirmation route
+    const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
       redirectTo,
