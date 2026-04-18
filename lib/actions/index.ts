@@ -7,6 +7,7 @@ import {
   applyCreditSchema,
   attendanceSchema,
   correctInvoiceSchema,
+  forgotPasswordSchema,
   freezeSubscriptionSchema,
   gymProfileSchema,
   gymSettingsSchema,
@@ -18,6 +19,7 @@ import {
   recordPaymentSchema,
   reminderTemplateSchema,
   renewSubscriptionSchema,
+  resetPasswordSchema,
   signupSchema,
 } from "@/lib/schemas/forms";
 import {
@@ -114,7 +116,47 @@ export async function signupAction(formData: FormData) {
 
   logAdminAction("signup", { email: values.email, fullName: values.fullName });
 
+  revalidatePath("/setup");
   redirect("/setup");
+}
+
+export async function forgotPasswordAction(formData: FormData) {
+  const values = forgotPasswordSchema.parse({
+    email: asString(formData.get("email")),
+  });
+
+  const supabase = createSupabaseServerClient();
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+    redirectTo,
+  });
+
+  if (error) {
+    redirect(`/forgot-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(error.message))}`);
+  }
+
+  redirect("/forgot-password?success=Check+your+email+for+a+reset+link");
+}
+
+export async function updatePasswordAction(formData: FormData) {
+  const values = resetPasswordSchema.parse({
+    password: asString(formData.get("password")),
+    confirmPassword: asString(formData.get("confirmPassword")),
+  });
+
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({
+    password: values.password,
+  });
+
+  if (error) {
+    redirect(`/reset-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(error.message))}`);
+  }
+
+  // After password reset, Supabase usually logs the user in.
+  // We can redirect them to setup or dashboard depending on context.
+  redirect("/dashboard?success=Password+updated+successfully");
 }
 
 export async function completeOnboardingAction(formData: FormData) {
