@@ -20,7 +20,7 @@ export default async function RemindersPage() {
     getReminderTemplates(session.gym!.id),
   ]);
 
-  const isGrowth = session.gym!.tier === "growth";
+  const isGrowth = session.entitlements.automatedWhatsapp;
 
   const expiryTemplate =
     templates.find((template) => template.template_type === "membership_expiry")?.body ??
