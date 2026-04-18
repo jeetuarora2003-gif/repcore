@@ -36,9 +36,9 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
       <aside className="hidden border-r border-border bg-black/30 px-4 py-6 lg:flex lg:flex-col">
         <div className="panel-muted flex items-center gap-3 px-4 py-3">
           <Logo size="sm" />
-          <div className="ml-auto">
-            <p className="text-[10px] font-medium text-muted-foreground">RepCore {tier === "growth" ? "Growth" : "Basic"}</p>
-            <p className="truncate text-xs font-semibold text-foreground">{gymName}</p>
+          <div className="flex flex-col">
+            <p className="truncate text-sm font-semibold text-foreground leading-tight">{gymName}</p>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Management Suite</p>
           </div>
         </div>
         <nav className="mt-6 space-y-1">
@@ -93,7 +93,6 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
               <p className="text-xs text-muted-foreground">{role === "owner" ? "Owner access" : "Front desk access"}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={tier === "growth" ? "accent" : "default"}>{tier === "growth" ? "Growth" : "Basic"}</Badge>
               <Link href="/settings" className="flex items-center gap-3 group active:scale-95 transition-all">
                 <div className="hidden text-right sm:block group-hover:opacity-80 transition-opacity">
                   <p className="text-sm font-medium">{userEmail}</p>
