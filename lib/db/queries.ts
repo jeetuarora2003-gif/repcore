@@ -147,6 +147,7 @@ type MembershipLookupRecord = {
     id: string;
     full_name: string;
     phone: string;
+    photo_url: string | null;
   };
 };
 
@@ -258,8 +259,18 @@ export async function getReminderTemplates(gymId: string) {
   return (data as ReminderTemplateRecord[]) ?? [];
 }
 
-export async function getGymCoreData(gymId: string) {
+export async function getGymCoreData(gymId: string, queryArchived: boolean = true) {
   const supabase = createSupabaseServerClient();
+
+  let membershipsQuery = supabase
+      .from("memberships")
+      .select("id, gym_id, member_id, started_on, archived_at, archive_reason, members!inner(id, full_name, phone, photo_url, notes, joined_on, created_at)")
+      .eq("gym_id", gymId)
+      .order("started_on", { ascending: false });
+      
+  if (!queryArchived) {
+      membershipsQuery = membershipsQuery.is("archived_at", null);
+  }
 
   const [
     membershipsResponse,
@@ -270,11 +281,7 @@ export async function getGymCoreData(gymId: string) {
     messageLogsResponse,
     freezesResponse,
   ] = await Promise.all([
-    supabase
-      .from("memberships")
-      .select("id, gym_id, member_id, started_on, archived_at, archive_reason, members!inner(id, full_name, phone, photo_url, notes, joined_on, created_at)")
-      .eq("gym_id", gymId)
-      .order("started_on", { ascending: false }),
+    membershipsQuery,
     supabase.from("v_subscription_effective_dates").select("*").eq("gym_id", gymId),
     supabase.from("v_invoice_balances").select("*").eq("gym_id", gymId),
     supabase.from("payments").select("*").eq("gym_id", gymId).order("received_on", { ascending: false }),
@@ -380,8 +387,8 @@ export async function getDashboardData(gymId: string, warningDays: number) {
   };
 }
 
-export async function getMembersPageData(gymId: string, warningDays: number, search = "", status = "all") {
-  const { memberships, subscriptions, invoiceBalances, freezes } = await getGymCoreData(gymId);
+export async function getMembersPageData(gymId: string, warningDays: number, search = "", status = "all", includeArchived: boolean = false) {
+  const { memberships, subscriptions, invoiceBalances, freezes } = await getGymCoreData(gymId, includeArchived);
 
   const records = memberships.map((membership) => {
     const memberSubscriptions = subscriptions.filter((item) => item.membership_id === membership.id);
@@ -406,6 +413,7 @@ export async function getMembersPageData(gymId: string, warningDays: number, sea
     return matchesSearch && matchesStatus;
   });
 }
+
 
 export async function getMemberDetailData(gymId: string, memberId: string, warningDays: number) {
   const { memberships, subscriptions, invoiceBalances, payments, attendanceLogs, messageLogs, freezes } = await getGymCoreData(gymId);
@@ -516,7 +524,7 @@ export async function getAttendancePageData(gymId: string, date: string) {
       .order("checked_in_at", { ascending: false }),
     supabase
       .from("memberships")
-      .select("id, member_id, archived_at, members!inner(id, full_name, phone)")
+      .select("id, member_id, archived_at, members!inner(id, full_name, phone, photo_url)")
       .eq("gym_id", gymId)
       .is("archived_at", null),
     // Most recent biometric push for live-sync status pill
@@ -657,6 +665,7 @@ export type ReminderPipelineMember = {
   memberId: string;
   memberName: string;
   memberPhone: string;
+  photoUrl: string | null;
   subscriptionId: string;
   planName: string;
   endDate: string;
@@ -689,7 +698,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
   // Fetch member info for these memberships
   const { data: memberships } = await supabase
     .from("memberships")
-    .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone)")
+    .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone, photo_url)")
     .eq("gym_id", gymId)
     .is("archived_at", null)
     .is("lapsed_at", null)
@@ -709,7 +718,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
   const membershipMap = new Map(
     ((memberships as any[]) ?? []).map((m: any) => {
       const member = Array.isArray(m.members) ? m.members[0] : m.members;
-      return [m.id, { memberId: m.member_id, memberName: member.full_name, memberPhone: member.phone }];
+      return [m.id, { memberId: m.member_id, memberName: member.full_name, memberPhone: member.phone, photoUrl: member.photo_url }];
     }),
   );
 
@@ -743,6 +752,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
       memberId: memberInfo.memberId,
       memberName: memberInfo.memberName,
       memberPhone: memberInfo.memberPhone,
+      photoUrl: memberInfo.photoUrl,
       subscriptionId: sub.subscription_id,
       planName: sub.plan_snapshot_name,
       endDate: sub.effective_end_date,
