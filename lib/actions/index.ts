@@ -32,6 +32,7 @@ import {
   renewSubscriptionRpc,
 } from "@/lib/rpc/repcore";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseEnv } from "@/lib/supabase/env";
 import { normalizeSupabaseErrorMessage } from "@/lib/supabase/errors";
 import { toPaise } from "@/lib/utils/format";
 import { logAdminAction } from "@/lib/utils/admin-log";
@@ -121,45 +122,58 @@ export async function signupAction(formData: FormData) {
 }
 
 export async function forgotPasswordAction(formData: FormData) {
-  const values = forgotPasswordSchema.parse({
-    email: asString(formData.get("email")),
-  });
+  try {
+    const values = forgotPasswordSchema.parse({
+      email: asString(formData.get("email")),
+    });
 
-  const supabase = createSupabaseServerClient();
-  const { siteUrl } = getSupabaseEnv();
-  
-  // Use the auth confirmation route to handle PKCE/Token exchange correctly
-  const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
+    const supabase = createSupabaseServerClient();
+    const { siteUrl } = getSupabaseEnv();
+    
+    // Use the auth confirmation route to handle PKCE/Token exchange correctly
+    const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
 
-  const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-    redirectTo,
-  });
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo,
+    });
 
-  if (error) {
-    redirect(`/forgot-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(error.message))}`);
+    if (error) {
+      throw error;
+    }
+
+    redirect("/forgot-password?success=Check+your+email+for+a+reset+link");
+  } catch (error: any) {
+    if (error.digest?.includes("NEXT_REDIRECT")) throw error;
+    
+    const message = error.message || "An unexpected error occurred";
+    redirect(`/forgot-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(message))}`);
   }
-
-  redirect("/forgot-password?success=Check+your+email+for+a+reset+link");
 }
 
 export async function updatePasswordAction(formData: FormData) {
-  const values = resetPasswordSchema.parse({
-    password: asString(formData.get("password")),
-    confirmPassword: asString(formData.get("confirmPassword")),
-  });
+  try {
+    const values = resetPasswordSchema.parse({
+      password: asString(formData.get("password")),
+      confirmPassword: asString(formData.get("confirmPassword")),
+    });
 
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.updateUser({
-    password: values.password,
-  });
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.updateUser({
+      password: values.password,
+    });
 
-  if (error) {
-    redirect(`/reset-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(error.message))}`);
+    if (error) {
+      throw error;
+    }
+
+    // After password reset, Supabase usually logs the user in.
+    redirect("/dashboard?success=Password+updated+successfully");
+  } catch (error: any) {
+    if (error.digest?.includes("NEXT_REDIRECT")) throw error;
+
+    const message = error.message || "An unexpected error occurred";
+    redirect(`/reset-password?error=${encodeURIComponent(normalizeSupabaseErrorMessage(message))}`);
   }
-
-  // After password reset, Supabase usually logs the user in.
-  // We can redirect them to setup or dashboard depending on context.
-  redirect("/dashboard?success=Password+updated+successfully");
 }
 
 export async function completeOnboardingAction(formData: FormData) {

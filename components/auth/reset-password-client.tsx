@@ -50,7 +50,7 @@ export function ResetPasswordClient() {
           <ShieldAlert className="h-6 w-6 text-red-500" />
         </div>
         <p className="text-sm font-medium text-red-500">{error}</p>
-        <a href="/forgot-password" size="sm" className="text-accent underline">Request new link</a>
+        <a href="/forgot-password" className="text-xs text-accent underline">Request new link</a>
       </div>
     );
   }

@@ -18,7 +18,15 @@ function normalizeEnvValue(value?: string) {
 export function getSupabaseEnv() {
   const url = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = normalizeEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  const siteUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL) || "http://localhost:3000";
+  
+  // Auto-detect Site URL: User defined > Vercel provided > Localhost
+  const nextPublicSiteUrl = normalizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL);
+  const vercelUrl = normalizeEnvValue(process.env.VERCEL_URL);
+  const siteUrl = nextPublicSiteUrl 
+    ? nextPublicSiteUrl 
+    : vercelUrl 
+      ? `https://${vercelUrl}` 
+      : "http://localhost:3000";
 
   if (!url || !anonKey) {
     throw new Error(
