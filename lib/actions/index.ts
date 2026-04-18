@@ -302,7 +302,7 @@ export async function createMembershipSaleAction(formData: FormData) {
   }
 
   revalidatePath("/members");
-  revalidatePath("/subscriptions");
+  revalidatePath("/members");
   revalidatePath("/dashboard");
   redirect("/members?success=Member+added+successfully");
 }
@@ -326,7 +326,7 @@ export async function renewSubscriptionAction(formData: FormData) {
   });
 
   assertSupabaseSuccess(error);
-  revalidatePath("/subscriptions");
+  revalidatePath("/members");
   revalidatePath("/members");
   revalidatePath("/dashboard");
   redirect(`/members/${values.membershipId}?success=Subscription+renewed`);
@@ -351,9 +351,8 @@ export async function freezeSubscriptionAction(formData: FormData) {
   });
 
   assertSupabaseSuccess(error);
-  revalidatePath("/subscriptions");
   revalidatePath("/members");
-  redirect("/subscriptions?success=Subscription+frozen");
+  redirect("/members?success=Subscription+frozen");
 }
 
 export async function recordPaymentAction(formData: FormData) {

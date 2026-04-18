@@ -93,13 +93,7 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
               <p className="text-xs text-muted-foreground">{role === "owner" ? "Owner access" : "Front desk access"}</p>
             </div>
             <div className="flex items-center gap-3">
-              {role === "owner" ? (
-                <Link href="/settings/subscription">
-                  <Badge variant={tier === "growth" ? "accent" : "default"} className="cursor-pointer hover:opacity-80 active:scale-95 transition-all">{tier === "growth" ? "Growth" : "Basic"}</Badge>
-                </Link>
-              ) : (
-                <Badge variant={tier === "growth" ? "accent" : "default"}>{tier === "growth" ? "Growth" : "Basic"}</Badge>
-              )}
+              <Badge variant={tier === "growth" ? "accent" : "default"}>{tier === "growth" ? "Growth" : "Basic"}</Badge>
               <Link href="/settings" className="flex items-center gap-3 group active:scale-95 transition-all">
                 <div className="hidden text-right sm:block group-hover:opacity-80 transition-opacity">
                   <p className="text-sm font-medium">{userEmail}</p>
