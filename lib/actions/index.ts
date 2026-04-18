@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getSessionContext } from "@/lib/auth/session";
 import {
   applyCreditSchema,
@@ -128,10 +129,14 @@ export async function forgotPasswordAction(formData: FormData) {
     });
 
     const supabase = createSupabaseServerClient();
-    const { siteUrl } = getSupabaseEnv();
+    
+    // Live host detection
+    const host = headers().get("host");
+    const protocol = host?.includes("localhost") ? "http" : "https";
+    const origin = `${protocol}://${host}`;
     
     // Use the auth confirmation route to handle PKCE/Token exchange correctly
-    const redirectTo = `${siteUrl}/auth/confirm?next=/reset-password`;
+    const redirectTo = `${origin}/auth/confirm?next=/reset-password`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
       redirectTo,
