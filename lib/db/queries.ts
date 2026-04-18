@@ -1,4 +1,4 @@
-import { addDays, endOfMonth, isAfter, isBefore, parseISO, startOfDay, startOfMonth } from "date-fns";
+import { addDays, endOfMonth, format, isAfter, isBefore, parseISO, startOfDay, startOfMonth, subDays } from "date-fns";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type MemberRecord = {
@@ -36,6 +36,9 @@ type SubscriptionRecord = {
   frozen_days: number;
   status: string;
   created_at: string;
+  reminder_1_sent_at: string | null;
+  reminder_3_sent_at: string | null;
+  reminder_5_sent_at: string | null;
 };
 
 type FreezeRecord = {
@@ -372,6 +375,17 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     monthlyBreakdown.push({ month: label, revenue: rev });
   }
 
+  const todayStr = format(today, "yyyy-MM-dd");
+  const yesterdayStr = format(subDays(today, 1), "yyyy-MM-dd");
+  const checkinsToday = attendanceLogs.filter(l => l.check_in_date === todayStr).length;
+  const checkinsYesterday = attendanceLogs.filter(l => l.check_in_date === yesterdayStr).length;
+  const collectedToday = payments
+    .filter(p => p.received_on === todayStr && p.status === "recorded")
+    .reduce((s, p) => s + p.amount_paise, 0);
+  const renewalsToday = subscriptions
+    .filter(s => format(parseISO(s.created_at), "yyyy-MM-dd") === todayStr)
+    .length;
+
   return {
     records,
     activeMembersCount,
@@ -380,6 +394,10 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     monthlyRevenue,
     monthlyBreakdown,
     recentActivity,
+    checkinsToday,
+    checkinsYesterday,
+    collectedToday,
+    renewalsToday,
     memberships: memberships.map((m) => ({
       id: m.id,
       members: { full_name: m.members.full_name, phone: m.members.phone },
