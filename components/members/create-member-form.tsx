@@ -13,7 +13,6 @@ type Plan = { id: string; name: string; duration_days: number };
 
 export function CreateMemberForm({ plans }: { plans: Plan[] }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const imageResetRef = useRef<(() => void) | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
@@ -22,7 +21,6 @@ export function CreateMemberForm({ plans }: { plans: Plan[] }) {
         await createMembershipSaleAction(formData);
         toast.success("Member enrolled successfully!");
         formRef.current?.reset();
-        imageResetRef.current?.();
       } catch (error: unknown) {
         toast.error(error instanceof Error ? error.message : "Failed to enrol member");
       }
@@ -76,7 +74,7 @@ export function CreateMemberForm({ plans }: { plans: Plan[] }) {
         </p>
       </div>
       <div className="sm:col-span-2 xl:col-span-1">
-        <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" onResetRef={imageResetRef} />
+        <ImageUpload bucket="member_photos" name="photoUrl" label="Member Photo" />
       </div>
       <input type="hidden" name="saleReason" value="new_join" />
       <div className="sm:col-span-2 xl:col-span-4">

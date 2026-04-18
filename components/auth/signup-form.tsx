@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { signUpAction } from "@/lib/actions";
+import { signupAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ export function SignupForm() {
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
-        await signUpAction(formData);
+        await signupAction(formData);
         router.push("/setup");
       } catch (error: unknown) {
         toast.error(error instanceof Error ? error.message : "Sign up failed. Please try again.");

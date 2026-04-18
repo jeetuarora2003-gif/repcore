@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { DigitalIdCard } from "@/components/members/digital-id-card";
 import { MemberTabs } from "@/components/members/member-tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { renderReminderTemplate } from "@/lib/utils/reminders";
 import { formatCurrency, formatDate } from "@/lib/utils/format";

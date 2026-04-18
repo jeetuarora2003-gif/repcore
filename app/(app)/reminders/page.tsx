@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { markReminderPaidAction } from "@/lib/actions";
 import { getSessionContext } from "@/lib/auth/session";
 import { getMembersPageData, getReminderTemplates } from "@/lib/db/queries";
@@ -15,9 +16,11 @@ export default async function RemindersPage() {
   if (!session.gym) redirect("/setup");
 
   const [members, templates] = await Promise.all([
-    getMembersPageData(session.gym.id, session.settings?.expiring_warning_days ?? 7),
-    getReminderTemplates(session.gym.id),
+    getMembersPageData(session.gym!.id, session.settings?.expiring_warning_days ?? 7),
+    getReminderTemplates(session.gym!.id),
   ]);
+
+  const isGrowth = session.gym!.tier === "growth";
 
   const expiryTemplate =
     templates.find((template) => template.template_type === "membership_expiry")?.body ??

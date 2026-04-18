@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { signInAction } from "@/lib/actions";
+import { loginAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ export function LoginForm() {
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
-        await signInAction(formData);
+        await loginAction(formData);
         router.push("/dashboard");
       } catch (error: unknown) {
         toast.error(error instanceof Error ? error.message : "Sign in failed. Check your credentials.");
