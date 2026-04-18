@@ -100,7 +100,7 @@ export default async function DashboardPage() {
       {/* ZONE 1 — HEADER */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <p className="text-[13px] text-muted-foreground">{greeting}, {ownerName}</p>
+          <p className="text-[13px] text-muted-foreground">{greeting}</p>
           <h1 className="text-[20px] font-medium tracking-tight">{session.gym.name}</h1>
         </div>
         <div className="rounded-full bg-secondary border border-border px-4 py-1.5 text-xs font-medium">
