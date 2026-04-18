@@ -77,7 +77,7 @@ export default async function MembersPage({
           ))}
         </div>
       ) : (
-        <EmptyState icon={UsersRound} title="No members yet" body="Add your first member to get started." action={<Button asChild><Link href="#fullName">Start with a member</Link></Button>} />
+        <EmptyState icon={<UsersRound className="h-8 w-8" />} title="No members yet" body="Add your first member to get started." action={<Button asChild><Link href="#fullName">Start with a member</Link></Button>} />
       )}
     </div>
   );
