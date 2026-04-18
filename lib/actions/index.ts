@@ -608,6 +608,7 @@ export async function markReminderPaidAction(formData: FormData) {
   const session = await requireGymContext();
   const supabase = createSupabaseServerClient();
   const membershipId = asString(formData.get("membershipId"));
+  const subscriptionId = asString(formData.get("subscriptionId"));
 
   if (!membershipId) return;
 
@@ -638,7 +639,75 @@ export async function markReminderPaidAction(formData: FormData) {
     assertSupabaseSuccess(error);
   }
 
+  // Clear reminder columns on the subscription
+  if (subscriptionId) {
+    await supabase
+      .from("subscriptions")
+      .update({
+        reminder_5_sent_at: null,
+        reminder_3_sent_at: null,
+        reminder_1_sent_at: null,
+      })
+      .eq("id", subscriptionId)
+      .eq("gym_id", session.gym!.id);
+  }
+
+  // Clear lapse status on membership
+  await supabase
+    .from("memberships")
+    .update({ lapsed_at: null })
+    .eq("id", membershipId)
+    .eq("gym_id", session.gym!.id);
+
   revalidatePath("/reminders");
   revalidatePath("/members");
   revalidatePath("/billing");
 }
+
+export async function markReminderSentAction(formData: FormData) {
+  const session = await requireGymContext();
+  const supabase = createSupabaseServerClient();
+  const subscriptionId = asString(formData.get("subscriptionId"));
+  const stage = asString(formData.get("stage")); // "5", "3", or "1"
+
+  if (!subscriptionId || !["5", "3", "1"].includes(stage)) return;
+
+  const columnMap: Record<string, string> = {
+    "5": "reminder_5_sent_at",
+    "3": "reminder_3_sent_at",
+    "1": "reminder_1_sent_at",
+  };
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ [columnMap[stage]]: new Date().toISOString() })
+    .eq("id", subscriptionId)
+    .eq("gym_id", session.gym!.id);
+
+  assertSupabaseSuccess(error);
+  revalidatePath("/reminders");
+}
+
+export async function reactivateLapsedMemberAction(formData: FormData) {
+  const session = await requireGymContext();
+  const supabase = createSupabaseServerClient();
+  const membershipId = asString(formData.get("membershipId"));
+  const memberId = asString(formData.get("memberId"));
+
+  if (!membershipId) return;
+
+  const { error } = await supabase
+    .from("memberships")
+    .update({ lapsed_at: null })
+    .eq("id", membershipId)
+    .eq("gym_id", session.gym!.id);
+
+  assertSupabaseSuccess(error);
+  revalidatePath("/reminders");
+  revalidatePath("/members");
+
+  if (memberId) {
+    redirect(`/members/${memberId}`);
+  }
+}
+
