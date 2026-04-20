@@ -731,7 +731,11 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
-  if (!subscriptions || subscriptions.length === 0) return [];
+  if (!subscriptions || subscriptions.length === 0) return [{
+    membershipId: "DEBUG",
+    planName: "NO SUBSCRIPTIONS FOUND",
+    daysRemaining: -1,
+  } as any];
 
   const membershipIds = subscriptions.map((s: any) => s.membership_id);
 
@@ -740,9 +744,14 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .from("memberships")
     .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone, photo_url)")
     .eq("gym_id", gymId)
-    .is("archived_at", null)
     .is("lapsed_at", null)
     .in("id", membershipIds);
+
+  if (!memberships || memberships.length === 0) return [{
+    membershipId: "DEBUG",
+    planName: "NO MEMBERSHIPS FOUND AFTER SUBS",
+    daysRemaining: -1,
+  } as any];
 
   // Fetch invoice balances
   const { data: invoices } = await supabase
@@ -801,6 +810,12 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
       reminder1SentAt: sub.reminder_1_sent_at ?? null,
     });
   }
+
+  if (results.length === 0) return [{
+    membershipId: "DEBUG",
+    planName: "DROPPED DURING FOR LOOP MAP",
+    daysRemaining: -1,
+  } as any];
 
   return results;
 }
