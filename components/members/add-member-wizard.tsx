@@ -53,6 +53,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
   const [phoneError, setPhoneError] = useState("");
   const [biometricDeviceId, setBiometricDeviceId] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [gender, setGender] = useState("");
   
   const [selectedPlanId, setSelectedPlanId] = useState(() => {
     return plans.find(p => p.is_popular)?.id || plans[0]?.id || "";
@@ -87,6 +88,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
     setPhoneError("");
     setBiometricDeviceId("");
     setPhotoUrl("");
+    setGender("");
     setPaymentMethod("cash");
     setIsFullPayment(true);
     setCustomAmount("");
@@ -132,6 +134,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
     data.set("fullName", fullName);
     data.set("phone", phone);
     data.set("photoUrl", photoUrl);
+    data.set("gender", gender);
     data.set("biometricDeviceId", biometricDeviceId);
 
     startTransition(async () => {
@@ -228,6 +231,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
               <input type="hidden" name="paymentMethod" value={paymentMethod} />
               <input type="hidden" name="paidAmountRupees" value={amountToCollect} />
               <input type="hidden" name="photoUrl" value={photoUrl} />
+              <input type="hidden" name="gender" value={gender} />
               <input type="hidden" name="biometricDeviceId" value={biometricDeviceId} />
 
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
@@ -286,6 +290,32 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
                         </div>
                         {phoneError && <p className="text-[11px] text-red-500 ml-1">{phoneError}</p>}
                       </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wider">Gender</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { id: "male", label: "Male" },
+                            { id: "female", label: "Female" },
+                            { id: "other", label: "Other" }
+                          ].map((g) => (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => setGender(g.id)}
+                              className={cn(
+                                "flex items-center justify-center py-2.5 rounded-xl border text-sm font-medium transition-all duration-200",
+                                gender === g.id
+                                  ? "bg-accent/10 border-accent text-accent shadow-[0_0_15px_rgba(34,197,94,0.1)]"
+                                  : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10"
+                              )}
+                            >
+                              {g.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <div className="space-y-2 pt-2 border-t border-white/5 mt-4">
                         <Label htmlFor="biometricDeviceId" className="text-xs text-muted-foreground uppercase tracking-wider">Device Enrollment ID</Label>
                         <Input

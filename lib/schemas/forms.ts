@@ -34,6 +34,7 @@ export const memberProfileSchema = z.object({
   memberId: z.string().uuid().optional(),
   fullName: z.string().min(2),
   phone: z.string().min(8),
+  gender: z.enum(["male", "female", "other"]).optional().or(z.literal("")),
   photoUrl: z.string().url().optional().or(z.literal("")),
   notes: z.string().optional().default(""),
 });
@@ -126,4 +127,17 @@ export const resetPasswordSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
+});
+
+export const whatsappConfigSchema = z.object({
+  mode: z.enum(["manual", "auto"]),
+  phone: z.string().optional(),
+  apiKey: z.string().optional(),
+});
+
+export const addCreditsSchema = z.object({
+  amountPaise: z.coerce.number().int().min(5000), // Min ₹50
+  razorpayOrderId: z.string().min(1),
+  razorpayPaymentId: z.string().min(1),
+  razorpaySignature: z.string().min(1),
 });

@@ -96,6 +96,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-28">
+      {/* ZONE 0 — LOW BALANCE ALERT */}
+      {dashboard.whatsappMode === "auto" && dashboard.whatsappBalance < 2000 && (
+        <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-amber-500/20 p-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-600 dark:text-amber-400">Auto reminders paused</p>
+              <p className="text-xs text-amber-700/80 dark:text-amber-500/80 leading-relaxed font-medium">
+                Credits low ({formatCurrency(dashboard.whatsappBalance)} remaining). Add credits to resume.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="bg-amber-500 text-white border-none hover:bg-amber-600 rounded-xl h-10 px-5 font-bold shadow-glow shrink-0 ml-4">
+            <Link href="/settings/whatsapp">Add Credits</Link>
+          </Button>
+        </div>
+      )}
+
       {/* ZONE 1 — HEADER */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">

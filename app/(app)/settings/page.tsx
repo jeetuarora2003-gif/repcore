@@ -161,6 +161,21 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent><ThemePicker /></CardContent>
       </Card>
+
+      <Card className="border-accent/40 bg-accent/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">WhatsApp Reminders</CardTitle>
+          <CardDescription>Configure how you want to remind members about dues and expiry.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline" className="w-full h-11 rounded-2xl border-accent/20 bg-accent/10 hover:bg-accent/20 transition-all">
+            <Link href="/settings/whatsapp" className="flex items-center justify-between">
+              Manage WhatsApp Reminders
+              <span className="text-accent">→</span>
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
       {/* Biometric Device */}
       <Card>
         <CardHeader>
