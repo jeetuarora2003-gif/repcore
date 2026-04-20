@@ -4,7 +4,6 @@ import { getBillingPageData } from "@/lib/db/queries";
 import { BillingClient } from "./billing-client";
 
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 
 export default async function BillingPage() {
   const session = await getSessionContext();
