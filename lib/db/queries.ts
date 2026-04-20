@@ -780,10 +780,10 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     // Calculate days remaining strictly via calendar strings
     const endMidnight = parseISO(sub.effective_end_date);
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
-    const daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    let daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
 
-    // Only include 5, 3, or 1 day members
-    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
+    // DIAGNOSTIC TEMPORARY BYPASS: allow all days through to see timezone offset diffs natively.
+    // if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
 
     results.push({
       membershipId: sub.membership_id,
