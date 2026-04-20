@@ -811,7 +811,7 @@ export async function updateWhatsappConfigAction(formData: FormData) {
     .update({
       whatsapp_reminder_mode: values.mode,
       whatsapp_phone_number: values.phone,
-      whatsapp_api_key: values.apiKey ? encrypt(values.apiKey) : undefined,
+      whatsapp_api_key: values.apiKey ? await encrypt(values.apiKey) : undefined,
     })
     .eq("id", session.gym!.id);
 
@@ -832,10 +832,30 @@ export async function addCreditsAction(formData: FormData) {
   });
 
   // Verify Razorpay signature server-side
-  const crypto = await import("crypto");
-  const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!);
-  hmac.update(values.razorpayOrderId + "|" + values.razorpayPaymentId);
-  const generatedSignature = hmac.digest("hex");
+  const encoder = new TextEncoder();
+  const subtle = await (async () => {
+    if (typeof globalThis.crypto?.subtle !== "undefined") return globalThis.crypto.subtle;
+    const nodeCrypto = eval('require("node:crypto")');
+    return nodeCrypto.webcrypto.subtle;
+  })();
+
+  const hmacKey = await subtle.importKey(
+    "raw",
+    encoder.encode(process.env.RAZORPAY_KEY_SECRET!),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const signatureBuffer = await subtle.sign(
+    "HMAC",
+    hmacKey,
+    encoder.encode(values.razorpayOrderId + "|" + values.razorpayPaymentId)
+  );
+
+  const generatedSignature = Array.from(new Uint8Array(signatureBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 
   if (generatedSignature !== values.razorpaySignature) {
     throw new Error("Payment verification failed. Invalid signature.");
