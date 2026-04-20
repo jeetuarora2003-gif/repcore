@@ -832,14 +832,17 @@ export async function addCreditsAction(formData: FormData) {
 
   // Verify Razorpay signature server-side
   const encoder = new TextEncoder();
-  const hmacKey = await crypto.subtle.importKey(
+  const nodeCrypto = await import("crypto");
+  const subtle = (nodeCrypto.webcrypto as any).subtle;
+
+  const hmacKey = await subtle.importKey(
     "raw", 
     encoder.encode(process.env.RAZORPAY_KEY_SECRET!),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
   );
-  const signatureBuffer = await crypto.subtle.sign(
+  const signatureBuffer = await subtle.sign(
     "HMAC",
     hmacKey,
     encoder.encode(values.razorpayOrderId + "|" + values.razorpayPaymentId)
