@@ -724,18 +724,32 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
-  // Fetch active memberships with their current subscription + reminder columns
-  const { data: subscriptions } = await supabase
+  // Fetch active memberships with their current subscription (without unregistered columns in View)
+  const { data: _subscriptions, error: subError } = await supabase
     .from("v_subscription_effective_dates")
-    .select("subscription_id, gym_id, membership_id, plan_snapshot_name, effective_end_date, status, reminder_5_sent_at, reminder_3_sent_at, reminder_1_sent_at")
+    .select("subscription_id, gym_id, membership_id, plan_snapshot_name, effective_end_date, status")
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
-  if (!subscriptions || subscriptions.length === 0) return [{
-    membershipId: "DEBUG",
-    planName: "NO SUBSCRIPTIONS FOUND",
-    daysRemaining: -1,
-  } as any];
+  if (subError || !_subscriptions || _subscriptions.length === 0) return [];
+
+  const subscriptionIds = _subscriptions.map((s: any) => s.subscription_id);
+
+  // Safely fetch tracking columns directly from subscriptions table
+  const { data: subTracking } = await supabase
+    .from("subscriptions")
+    .select("id, reminder_5_sent_at, reminder_3_sent_at, reminder_1_sent_at")
+    .in("id", subscriptionIds);
+
+  const subTrackingMap = new Map((subTracking || []).map((s: any) => [s.id, s]));
+
+  // Re-map the combined subscription payload
+  const subscriptions = _subscriptions.map((s: any) => ({
+    ...s,
+    reminder_5_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_5_sent_at,
+    reminder_3_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_3_sent_at,
+    reminder_1_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_1_sent_at,
+  }));
 
   const membershipIds = subscriptions.map((s: any) => s.membership_id);
 
@@ -747,11 +761,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .is("lapsed_at", null)
     .in("id", membershipIds);
 
-  if (!memberships || memberships.length === 0) return [{
-    membershipId: "DEBUG",
-    planName: "NO MEMBERSHIPS FOUND AFTER SUBS",
-    daysRemaining: -1,
-  } as any];
+  if (!memberships || memberships.length === 0) return [];
 
   // Fetch invoice balances
   const { data: invoices } = await supabase
@@ -789,10 +799,10 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     // Calculate days remaining strictly via calendar strings
     const endMidnight = parseISO(sub.effective_end_date);
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
-    let daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    const daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
 
-    // DIAGNOSTIC TEMPORARY BYPASS: allow all days through to see timezone offset diffs natively.
-    // if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
+    // Only include 5, 3, or 1 day members
+    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
 
     results.push({
       membershipId: sub.membership_id,
@@ -810,12 +820,6 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
       reminder1SentAt: sub.reminder_1_sent_at ?? null,
     });
   }
-
-  if (results.length === 0) return [{
-    membershipId: "DEBUG",
-    planName: "DROPPED DURING FOR LOOP MAP",
-    daysRemaining: -1,
-  } as any];
 
   return results;
 }
