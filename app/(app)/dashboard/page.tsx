@@ -33,7 +33,6 @@ import { cn } from "@/lib/utils/cn";
 import { format, subDays, startOfMonth, isSameDay, parseISO } from "date-fns";
 
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 
 export default async function DashboardPage() {
   const session = await getSessionContext();
