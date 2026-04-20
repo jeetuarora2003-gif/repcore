@@ -52,7 +52,7 @@ export async function sendAutoRemindersForGym(gymId: string) {
 
   // Decrypted API key from gyms table
   const { decrypt } = await import("@/lib/utils/encryption");
-  const decryptedApiKey = decrypt(gym.whatsapp_api_key ?? "");
+  const decryptedApiKey = await decrypt(gym.whatsapp_api_key ?? "");
   if (!decryptedApiKey) {
     return { error: "Decryption failed or API key missing" };
   }
