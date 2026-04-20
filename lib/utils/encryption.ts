@@ -35,12 +35,13 @@ async function getSubtle(): Promise<SubtleCrypto> {
   }
   // Fallback for Node.js 18 where it might not be global
   try {
-    const nodeCrypto = eval('require("node:crypto")');
-    return nodeCrypto.webcrypto.subtle;
+    const nodeCrypto = await import("node:crypto");
+    return nodeCrypto.webcrypto.subtle as SubtleCrypto;
   } catch (e) {
     throw new Error("Wait-Crypto (Subtle) not available in this environment.");
   }
 }
+
 
 async function getEncryptionKey(subtle: SubtleCrypto) {
   const encoder = new TextEncoder();
