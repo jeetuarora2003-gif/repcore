@@ -34,7 +34,7 @@ import { format, subDays, startOfMonth, isSameDay, parseISO } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
-async function DashboardContent() {
+export default async function DashboardPage() {
   const session = await getSessionContext();
   if (!session.gym) redirect("/setup");
 
@@ -336,18 +336,3 @@ async function DashboardContent() {
     </div>
   );
 }
-
-export default async function DashboardPage() {
-  try {
-    return await DashboardContent();
-  } catch (error: any) {
-    return (
-      <div className="p-10 bg-black min-h-screen text-white font-mono break-all z-50 fixed inset-0">
-        <h1 className="text-2xl text-red-500 font-bold mb-4">SERVER RENDER CRASH: Dashboard</h1>
-        <p className="text-red-300 text-sm whitespace-pre-wrap">{error?.message || 'Unknown error'}</p>
-        <pre className="mt-4 text-xs text-red-200 whitespace-pre-wrap">{error?.stack}</pre>
-      </div>
-    );
-  }
-}
-

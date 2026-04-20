@@ -393,10 +393,12 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     .filter(s => format(parseISO(s.created_at), "yyyy-MM-dd") === todayStr)
     .length;
 
+  const supabase = createSupabaseServerClient();
   const [gymSettings, whatsappCredits] = await Promise.all([
     supabase.from("gyms").select("whatsapp_reminder_mode").eq("id", gymId).single(),
     supabase.from("whatsapp_credits").select("balance_paise").eq("gym_id", gymId).maybeSingle()
   ]);
+
 
   return {
     records,
