@@ -18,14 +18,10 @@ const nextConfig = {
       },
     ],
   },
-  // Fix: Prevent 'crypto' module resolution errors during build by ignoring it for the client bundle.
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        crypto: false,
-      };
-    }
+  // Triple-Lock Fix:
+  // 1. Mark 'crypto' as an external so Webpack stops trying to resolve it for the client.
+  webpack: (config) => {
+    config.externals.push("node:crypto", "crypto");
     return config;
   },
 };

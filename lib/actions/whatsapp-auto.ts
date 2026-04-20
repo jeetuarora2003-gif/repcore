@@ -1,7 +1,6 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { decrypt } from "@/lib/utils/encryption";
 import { getRemindersPipelineData } from "@/lib/db/queries";
 
 /**
@@ -52,7 +51,8 @@ export async function sendAutoRemindersForGym(gymId: string) {
   }
 
   // Decrypted API key from gyms table
-  const decryptedApiKey = await decrypt(gym.whatsapp_api_key ?? "");
+  const { decrypt } = await import("@/lib/utils/encryption");
+  const decryptedApiKey = decrypt(gym.whatsapp_api_key ?? "");
   if (!decryptedApiKey) {
     return { error: "Decryption failed or API key missing" };
   }
