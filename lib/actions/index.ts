@@ -22,7 +22,11 @@ import {
   renewSubscriptionSchema,
   resetPasswordSchema,
   signupSchema,
+  whatsappConfigSchema,
+  addCreditsSchema,
 } from "@/lib/schemas/forms";
+import crypto from "crypto";
+import { encrypt } from "@/lib/utils/encryption";
 import {
   applyMembershipCreditRpc,
   completeOnboardingRpc,
@@ -313,6 +317,7 @@ export async function createMembershipSaleAction(formData: FormData) {
     existingMemberId: asString(formData.get("existingMemberId")) || undefined,
     fullName: asString(formData.get("fullName")),
     phone: asString(formData.get("phone")),
+    gender: asString(formData.get("gender")),
     photoUrl: asString(formData.get("photoUrl")),
     notes: asString(formData.get("notes")),
     planId: asString(formData.get("planId")),
@@ -329,11 +334,12 @@ export async function createMembershipSaleAction(formData: FormData) {
     existingMemberId: values.existingMemberId,
     fullName: values.fullName,
     phone: values.phone,
+    gender: values.gender || null,
     photoUrl: values.photoUrl,
     notes: values.notes,
     planId: values.planId,
     startDate: values.startDate,
-    saleReason: values.saleReason,
+    saleReason: values.saleReason as "new_join" | "rejoin",
   });
 
   assertSupabaseSuccess(error);
@@ -773,5 +779,78 @@ export async function reactivateLapsedMemberAction(formData: FormData) {
   if (memberId) {
     redirect(`/members/${memberId}`);
   }
+}
+
+export async function updateReminderModeAction(formData: FormData) {
+  const session = await requireOwnerContext();
+  const supabase = createSupabaseServerClient();
+  const mode = asString(formData.get("mode")) as "manual" | "auto";
+
+  const { error } = await supabase
+    .from("gyms")
+    .update({ whatsapp_reminder_mode: mode })
+    .eq("id", session.gym!.id);
+
+  assertSupabaseSuccess(error);
+  revalidatePath("/settings/whatsapp");
+  revalidatePath("/settings");
+}
+
+export async function updateWhatsappConfigAction(formData: FormData) {
+  const session = await requireOwnerContext();
+  const supabase = createSupabaseServerClient();
+
+  const values = whatsappConfigSchema.parse({
+    mode: asString(formData.get("mode")),
+    phone: asString(formData.get("phone")),
+    apiKey: asString(formData.get("apiKey")),
+  });
+
+  const { error } = await supabase
+    .from("gyms")
+    .update({
+      whatsapp_reminder_mode: values.mode,
+      whatsapp_phone_number: values.phone,
+      whatsapp_api_key: values.apiKey ? encrypt(values.apiKey) : undefined,
+    })
+    .eq("id", session.gym!.id);
+
+  assertSupabaseSuccess(error);
+  revalidatePath("/settings/whatsapp");
+  revalidatePath("/settings");
+}
+
+export async function addCreditsAction(formData: FormData) {
+  const session = await requireOwnerContext();
+  const supabase = createSupabaseServerClient();
+
+  const values = addCreditsSchema.parse({
+    amountPaise: asString(formData.get("amountPaise")),
+    razorpayOrderId: asString(formData.get("razorpayOrderId")),
+    razorpayPaymentId: asString(formData.get("razorpayPaymentId")),
+    razorpaySignature: asString(formData.get("razorpaySignature")),
+  });
+
+  // Verify Razorpay signature server-side
+  const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!);
+  hmac.update(values.razorpayOrderId + "|" + values.razorpayPaymentId);
+  const generatedSignature = hmac.digest("hex");
+
+  if (generatedSignature !== values.razorpaySignature) {
+    throw new Error("Payment verification failed. Invalid signature.");
+  }
+
+  // Atomically update balance and log transaction via RPC
+  const { error } = await supabase.rpc("add_gym_credits", {
+    p_gym_id: session.gym!.id,
+    p_amount_paise: values.amountPaise,
+    p_order_id: values.razorpayOrderId,
+    p_payment_id: values.razorpayPaymentId,
+    p_description: `Top-up · ₹${values.amountPaise / 100}`,
+  });
+
+  assertSupabaseSuccess(error);
+  revalidatePath("/settings/whatsapp");
+  revalidatePath("/settings");
 }
 

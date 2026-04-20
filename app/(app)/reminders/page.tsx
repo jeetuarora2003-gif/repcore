@@ -47,6 +47,9 @@ export default async function RemindersPage() {
   // Auto-lapse expired unpaid members before rendering
   await markMembershipsLapsed(session.gym.id);
 
+  // Trigger auto-reminder engine for 'auto' mode gyms
+  await sendAutoRemindersForGym(session.gym.id);
+
   // Fetch pipeline data
   const pipelineMembers = await getRemindersPipelineData(session.gym.id);
 

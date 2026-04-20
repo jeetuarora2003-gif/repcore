@@ -393,6 +393,11 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     .filter(s => format(parseISO(s.created_at), "yyyy-MM-dd") === todayStr)
     .length;
 
+  const [gymSettings, whatsappCredits] = await Promise.all([
+    supabase.from("gyms").select("whatsapp_reminder_mode").eq("id", gymId).single(),
+    supabase.from("whatsapp_credits").select("balance_paise").eq("gym_id", gymId).maybeSingle()
+  ]);
+
   return {
     records,
     activeMembersCount,
@@ -405,6 +410,8 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     checkinsYesterday,
     collectedToday,
     renewalsToday,
+    whatsappMode: gymSettings.data?.whatsapp_reminder_mode || "manual",
+    whatsappBalance: whatsappCredits.data?.balance_paise || 0,
     memberships: memberships.map((m) => ({
       id: m.id,
       members: { full_name: m.members.full_name, phone: m.members.phone },
@@ -796,6 +803,35 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
   }
 
   return results;
+}
+
+export async function getWhatsappSettingsData(gymId: string) {
+  const supabase = createSupabaseServerClient();
+  
+  const [gymResponse, creditsResponse, transactionsResponse] = await Promise.all([
+    supabase
+      .from("gyms")
+      .select("id, name, whatsapp_reminder_mode, whatsapp_phone_number, whatsapp_api_key")
+      .eq("id", gymId)
+      .single(),
+    supabase
+      .from("whatsapp_credits")
+      .select("balance_paise")
+      .eq("gym_id", gymId)
+      .maybeSingle(),
+    supabase
+      .from("whatsapp_credit_transactions")
+      .select("*")
+      .eq("gym_id", gymId)
+      .order("created_at", { ascending: false })
+      .limit(20)
+  ]);
+
+  return {
+    gym: gymResponse.data,
+    balance: creditsResponse.data?.balance_paise ?? 0,
+    transactions: transactionsResponse.data ?? [],
+  };
 }
 
 /**

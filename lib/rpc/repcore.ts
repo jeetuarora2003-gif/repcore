@@ -39,6 +39,7 @@ export async function createMembershipSaleRpc(
     fullName: string;
     phone: string;
     photoUrl?: string;
+    gender?: string;
     notes?: string;
     planId: string;
     startDate: string;
@@ -51,6 +52,7 @@ export async function createMembershipSaleRpc(
     p_member_name: payload.fullName,
     p_phone: payload.phone,
     p_photo_url: payload.photoUrl || null,
+    p_gender: payload.gender || null,
     p_notes: payload.notes || null,
     p_plan_id: payload.planId,
     p_start_date: payload.startDate,
