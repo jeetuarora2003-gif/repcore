@@ -316,10 +316,10 @@ export async function createMembershipSaleAction(formData: FormData) {
     photoUrl: asString(formData.get("photoUrl")),
     notes: asString(formData.get("notes")),
     planId: asString(formData.get("planId")),
-    startDate: asString(formData.get("startDate")),
+    startDate: asString(formData.get("startDate")) || new Date().toISOString().split("T")[0],
     saleReason: asString(formData.get("saleReason")) || "new_join",
     paidAmountRupees: asString(formData.get("paidAmountRupees")),
-    paymentMethod: asString(formData.get("paymentMethod")),
+    paymentMethod: asString(formData.get("paymentMethod")) || "cash",
     paymentReference: asString(formData.get("paymentReference")),
   });
   const biometricDeviceId = asString(formData.get("biometricDeviceId")) || null;

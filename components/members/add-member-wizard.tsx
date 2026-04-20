@@ -31,6 +31,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
   const [planId, setPlanId] = useState(plans[0]?.id ?? "");
   const [paidAmount, setPaidAmount] = useState("0");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [startDate, setStartDate] = useState(new Date().toLocaleDateString("en-CA"));
 
   const resetWizard = () => {
     setStep(1);
@@ -39,6 +40,7 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
     setPlanId(plans[0]?.id ?? "");
     setPaidAmount("0");
     setPaymentMethod("cash");
+    setStartDate(new Date().toLocaleDateString("en-CA"));
     formRef.current?.reset();
   };
 
@@ -192,7 +194,8 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
                     name="startDate"
                     type="date"
                     required
-                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
                     disabled={isPending}
                   />
                 </div>
@@ -208,6 +211,8 @@ export function AddMemberWizard({ plans }: { plans: Plan[] }) {
                 <input type="hidden" name="fullName" value={fullName} />
                 <input type="hidden" name="phone" value={phone} />
                 <input type="hidden" name="planId" value={planId} />
+                <input type="hidden" name="startDate" value={startDate} />
+                <input type="hidden" name="paymentMethod" value={paymentMethod} />
                 <input type="hidden" name="saleReason" value="new_join" />
 
                 <div className="space-y-2">
