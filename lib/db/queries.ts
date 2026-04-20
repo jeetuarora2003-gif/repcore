@@ -751,9 +751,10 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("membership_id", membershipIds);
 
-  // Calculate today in IST
+  // Calculate today in IST safely string-based to avoid UTC/Local Node.js bleeding
   const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-  const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+  const todayStr = format(nowIST, "yyyy-MM-dd");
+  const todayMidnight = parseISO(todayStr);
 
   const membershipMap = new Map(
     ((memberships as any[]) ?? []).map((m: any) => {
@@ -776,13 +777,10 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     if (!memberInfo) continue;
 
     const duePaise = duesMap.get(sub.membership_id) ?? 0;
-    if (duePaise <= 0) continue; // Skip fully paid members
-
-    // Calculate days remaining (IST-aware)
-    const endDate = new Date(sub.effective_end_date + "T00:00:00+05:30");
-    const endDateLocal = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    const diffMs = endDateLocal.getTime() - todayIST.getTime();
-    const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    // Calculate days remaining strictly via calendar strings
+    const endMidnight = parseISO(sub.effective_end_date);
+    const diffMs = endMidnight.getTime() - todayMidnight.getTime();
+    const daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
 
     // Only include 5, 3, or 1 day members
     if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
