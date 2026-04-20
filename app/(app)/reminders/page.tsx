@@ -13,6 +13,7 @@ import { buildWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import type { ReminderPipelineMember } from "@/lib/db/queries";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import { sendAutoRemindersForGym } from "@/lib/actions/whatsapp-auto";
 
 export const dynamic = "force-dynamic";
 
