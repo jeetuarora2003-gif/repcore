@@ -835,9 +835,10 @@ export async function addCreditsAction(formData: FormData) {
   const encoder = new TextEncoder();
   const subtle = await (async () => {
     if (typeof globalThis.crypto?.subtle !== "undefined") return globalThis.crypto.subtle;
-    const nodeCrypto = eval('require("node:crypto")');
-    return nodeCrypto.webcrypto.subtle;
+    const nodeCrypto = await import("node:crypto");
+    return nodeCrypto.webcrypto.subtle as SubtleCrypto;
   })();
+
 
   const hmacKey = await subtle.importKey(
     "raw",
