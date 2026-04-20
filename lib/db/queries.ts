@@ -759,16 +759,16 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
   const membershipIds = subscriptions.map((s: any) => s.membership_id);
 
   // Fetch member info for these memberships
-  const { data: memberships } = await supabase
+  const { data: memberships, error: memError } = await supabase
     .from("memberships")
-    .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone, photo_url)")
+    .select("id, member_id, archived_at, members!inner(id, full_name, phone, photo_url)")
     .eq("gym_id", gymId)
     .in("id", membershipIds);
 
-  if (!memberships || memberships.length === 0) return [{
+  if (memError || !memberships || memberships.length === 0) return [{
     membershipId: "DEBUG",
-    planName: "NO_MEMBERSHIPS_FOUND_IN_TABLE",
-    memberName: `GymId: ${gymId}. Count from Subscriptions: ${subscriptions.length}`,
+    planName: memError ? "SQL_ERROR_ON_MEMBERSHIPS" : "NO_MEMBERSHIPS_FOUND_IN_TABLE",
+    memberName: memError ? memError.message : `GymId: ${gymId}. Count from Subscriptions: ${subscriptions.length}. IDs: ${membershipIds.slice(0, 3).join(",")}`,
     daysRemaining: -1
   } as any];
 
