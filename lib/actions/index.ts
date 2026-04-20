@@ -832,7 +832,7 @@ export async function addCreditsAction(formData: FormData) {
 
   // Verify Razorpay signature server-side
   const encoder = new TextEncoder();
-  const nodeCrypto = await import("crypto");
+  const nodeCrypto = eval('require("crypto")');
   const subtle = (nodeCrypto.webcrypto as any).subtle;
 
   const hmacKey = await subtle.importKey(
