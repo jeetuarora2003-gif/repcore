@@ -1,5 +1,3 @@
-import crypto from "node:crypto";
-
 const ALGORITHM = "aes-256-cbc";
 // Fallback is for local development only. Production MUST set WHATSAPP_ENCRYPTION_KEY.
 const ENCRYPTION_KEY = (process.env.WHATSAPP_ENCRYPTION_KEY || "r3pc0r3_s3cr3t_v1_f0r_w_h_a_t_s_a_p_p_").slice(0, 32); 
@@ -11,6 +9,7 @@ const IV_LENGTH = 16;
  */
 export function encrypt(text: string): string {
   if (!text) return "";
+  const crypto = require("crypto");
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
   let encrypted = cipher.update(text);
@@ -23,6 +22,7 @@ export function encrypt(text: string): string {
  */
 export function decrypt(text: string): string {
   if (!text) return "";
+  const crypto = require("crypto");
   try {
     const textParts = text.split(":");
     const ivPart = textParts.shift();
