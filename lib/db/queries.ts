@@ -763,10 +763,14 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .from("memberships")
     .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone, photo_url)")
     .eq("gym_id", gymId)
-    .is("lapsed_at", null)
     .in("id", membershipIds);
 
-  if (!memberships || memberships.length === 0) return [];
+  if (!memberships || memberships.length === 0) return [{
+    membershipId: "DEBUG",
+    planName: "NO_MEMBERSHIPS_FOUND_IN_TABLE",
+    memberName: `GymId: ${gymId}. Count from Subscriptions: ${subscriptions.length}`,
+    daysRemaining: -1
+  } as any];
 
   // Fetch invoice balances
   const { data: invoices } = await supabase
@@ -806,8 +810,28 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
     const daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
 
-    // Only include 5, 3, or 1 day members
-    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
+    // DIAGNOSTIC TRACE: capture everyone for a moment
+    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) {
+       results.push({
+         membershipId: sub.membership_id,
+         memberName: `FILTERED: ${memberInfo.memberName} (${daysRemaining}d left)`,
+         planName: "DATE_FILTER_MISMATCH",
+         daysRemaining: daysRemaining,
+         duePaise: duePaise
+       } as any);
+       continue;
+    }
+
+    if (memberInfo.lapsed_at) {
+       results.push({
+         membershipId: sub.membership_id,
+         memberName: `FILTERED: ${memberInfo.memberName} (Lapsed)`,
+         planName: "LAPSED_FILTER_MISMATCH",
+         daysRemaining: daysRemaining,
+         duePaise: duePaise
+       } as any);
+       continue;
+    }
 
     results.push({
       membershipId: sub.membership_id,
