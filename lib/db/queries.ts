@@ -731,7 +731,12 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
-  if (subError || !_subscriptions || _subscriptions.length === 0) return [];
+  if (subError || !_subscriptions || _subscriptions.length === 0) return [{
+    membershipId: "DEBUG",
+    planName: "ERROR_OR_ZERO_SUBS",
+    memberName: subError ? subError.message : "ZERO_SUBS",
+    daysRemaining: -1
+  } as any];
 
   const subscriptionIds = _subscriptions.map((s: any) => s.subscription_id);
 

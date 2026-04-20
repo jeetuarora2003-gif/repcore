@@ -72,7 +72,7 @@ export default async function RemindersPage() {
       />
 
       <div className="bg-black text-green-500 font-mono text-xs p-4 rounded overflow-auto border border-green-500/30">
-        <h3 className="text-white border-b border-green-500/30 mb-2 pb-1">DIAGNOSTIC PIPELINE DUMP</h3>
+        <h3 className="text-white border-b border-green-500/30 mb-2 pb-1">DIAGNOSTIC PIPELINE DUMP V2</h3>
         <div>Total Found from DB Query: {pipelineMembers.length}</div>
         <pre>{JSON.stringify(pipelineMembers, null, 2)}</pre>
       </div>
