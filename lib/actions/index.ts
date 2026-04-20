@@ -25,7 +25,7 @@ import {
   whatsappConfigSchema,
   addCreditsSchema,
 } from "@/lib/schemas/forms";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { encrypt } from "@/lib/utils/encryption";
 import {
   applyMembershipCreditRpc,

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const ALGORITHM = "aes-256-cbc";
 // Fallback is for local development only. Production MUST set WHATSAPP_ENCRYPTION_KEY.
