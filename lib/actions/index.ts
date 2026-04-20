@@ -25,7 +25,6 @@ import {
   whatsappConfigSchema,
   addCreditsSchema,
 } from "@/lib/schemas/forms";
-import crypto from "node:crypto";
 import { encrypt } from "@/lib/utils/encryption";
 import {
   applyMembershipCreditRpc,
@@ -832,6 +831,7 @@ export async function addCreditsAction(formData: FormData) {
   });
 
   // Verify Razorpay signature server-side
+  const crypto = require("crypto");
   const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!);
   hmac.update(values.razorpayOrderId + "|" + values.razorpayPaymentId);
   const generatedSignature = hmac.digest("hex");
