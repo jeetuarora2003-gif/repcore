@@ -12,9 +12,10 @@ interface ImageUploadProps {
   name: string;
   label?: string;
   className?: string;
+  onUploadComplete?: (url: string) => void;
 }
 
-export function ImageUpload({ bucket, defaultValue, name, label, className }: ImageUploadProps) {
+export function ImageUpload({ bucket, defaultValue, name, label, className, onUploadComplete }: ImageUploadProps) {
   const [url, setUrl] = useState(defaultValue || "");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +42,7 @@ export function ImageUpload({ bucket, defaultValue, name, label, className }: Im
         .getPublicUrl(filePath);
 
       setUrl(publicUrl);
+      onUploadComplete?.(publicUrl);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       alert("Error uploading image: " + message);
