@@ -312,23 +312,45 @@ export async function getGymCoreData(gymId: string, queryArchived: boolean = tru
 }
 
 export async function getDashboardData(gymId: string, warningDays: number) {
-  const { memberships, subscriptions, invoiceBalances, payments, attendanceLogs, messageLogs, freezes } = await getGymCoreData(gymId, true, 2);
+  // 1. Parallelize independent queries
+  const [coreData, gymSettings, whatsappCredits] = await Promise.all([
+    getGymCoreData(gymId, true, 2),
+    createSupabaseServerClient().from("gyms").select("whatsapp_reminder_mode").eq("id", gymId).single(),
+    createSupabaseServerClient().from("whatsapp_credits").select("balance_paise").eq("gym_id", gymId).maybeSingle()
+  ]);
+
+  const { memberships, subscriptions, invoiceBalances, payments, attendanceLogs, messageLogs, freezes } = coreData;
   const today = startOfDay(new Date());
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
 
+  // 2. Pre-index data for O(1) lookups (avoids O(N^2) performance hit)
+  const subsMap = new Map<string, SubscriptionRecord[]>();
+  for (const s of subscriptions) {
+    if (!subsMap.has(s.membership_id)) subsMap.set(s.membership_id, []);
+    subsMap.get(s.membership_id)!.push(s);
+  }
+
+  const invoicesMap = new Map<string, InvoiceBalance[]>();
+  for (const inv of invoiceBalances) {
+    if (inv.derived_status === "voided") continue;
+    if (!invoicesMap.has(inv.membership_id)) invoicesMap.set(inv.membership_id, []);
+    invoicesMap.get(inv.membership_id)!.push(inv);
+  }
+
+  // 3. Compute records efficiently
   const records = memberships
     .filter(m => m.archived_at === null)
     .map((membership) => {
-    const memberSubscriptions = subscriptions.filter((item) => item.membership_id === membership.id);
-    const memberInvoices = invoiceBalances.filter((item) => item.membership_id === membership.id && item.derived_status !== "voided");
-    return {
-      ...membership,
-      currentSubscription: getCurrentSubscription(memberSubscriptions),
-      status: deriveMembershipStatus(membership, memberSubscriptions, warningDays, freezes),
-      duePaise: memberInvoices.reduce((sum, item) => sum + item.amount_due_paise, 0),
-    };
-  });
+      const memberSubscriptions = subsMap.get(membership.id) ?? [];
+      const memberInvoices = invoicesMap.get(membership.id) ?? [];
+      return {
+        ...membership,
+        currentSubscription: getCurrentSubscription(memberSubscriptions),
+        status: deriveMembershipStatus(membership, memberSubscriptions, warningDays, freezes),
+        duePaise: memberInvoices.reduce((sum, item) => sum + item.amount_due_paise, 0),
+      };
+    });
 
   const activeMembersCount = records.filter((item) => ["active", "expiring_soon", "frozen"].includes(item.status)).length;
   const expiringThisWeek = records.filter((item) => item.status === "expiring_soon");
@@ -393,13 +415,6 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     .filter(s => format(parseISO(s.created_at), "yyyy-MM-dd") === todayStr)
     .length;
 
-  const supabase = createSupabaseServerClient();
-  const [gymSettings, whatsappCredits] = await Promise.all([
-    supabase.from("gyms").select("whatsapp_reminder_mode").eq("id", gymId).single(),
-    supabase.from("whatsapp_credits").select("balance_paise").eq("gym_id", gymId).maybeSingle()
-  ]);
-
-
   return {
     records,
     activeMembersCount,
@@ -424,9 +439,23 @@ export async function getDashboardData(gymId: string, warningDays: number) {
 export async function getMembersPageData(gymId: string, warningDays: number, search = "", status = "all", includeArchived: boolean = false) {
   const { memberships, subscriptions, invoiceBalances, freezes } = await getGymCoreData(gymId, includeArchived);
 
+  // Pre-index data for O(1) lookups
+  const subsMap = new Map<string, SubscriptionRecord[]>();
+  for (const s of subscriptions) {
+    if (!subsMap.has(s.membership_id)) subsMap.set(s.membership_id, []);
+    subsMap.get(s.membership_id)!.push(s);
+  }
+
+  const invoicesMap = new Map<string, InvoiceBalance[]>();
+  for (const inv of invoiceBalances) {
+    if (inv.derived_status === "voided") continue;
+    if (!invoicesMap.has(inv.membership_id)) invoicesMap.set(inv.membership_id, []);
+    invoicesMap.get(inv.membership_id)!.push(inv);
+  }
+
   const records = memberships.map((membership) => {
-    const memberSubscriptions = subscriptions.filter((item) => item.membership_id === membership.id);
-    const memberInvoices = invoiceBalances.filter((item) => item.membership_id === membership.id && item.derived_status !== "voided");
+    const memberSubscriptions = subsMap.get(membership.id) ?? [];
+    const memberInvoices = invoicesMap.get(membership.id) ?? [];
     return {
       ...membership,
       currentSubscription: getCurrentSubscription(memberSubscriptions),
