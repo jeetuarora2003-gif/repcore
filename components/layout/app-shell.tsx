@@ -33,7 +33,7 @@ export function AppShell({ gymName, role, tier, userEmail, children }: AppShellP
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="hidden border-r border-border bg-black/30 px-4 py-6 lg:flex lg:flex-col">
+      <aside className="hidden sticky top-0 h-screen border-r border-border bg-black/30 px-4 py-6 lg:flex lg:flex-col overflow-y-auto">
         <div className="panel-muted flex items-center gap-3 px-4 py-3">
           <Logo size="sm" />
         </div>
