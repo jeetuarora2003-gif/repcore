@@ -693,6 +693,8 @@ export async function getPublicMemberCardData(memberId: string) {
     .select(`
       id,
       gym_id,
+      archived_at,
+      started_on,
       gyms!inner(name, logo_url),
       members!inner(full_name, photo_url)
     `)
@@ -702,7 +704,7 @@ export async function getPublicMemberCardData(memberId: string) {
   if (error || !data) return null;
 
   const [subscriptions, freezes] = await Promise.all([
-    supabase.from("subscriptions").select("*").eq("membership_id", memberId),
+    supabase.from("v_subscription_effective_dates").select("*").eq("membership_id", memberId),
     supabase.from("subscription_freezes").select("*").eq("gym_id", data.gym_id),
   ]);
 
