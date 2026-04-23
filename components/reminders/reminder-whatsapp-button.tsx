@@ -11,6 +11,7 @@ type ReminderWhatsappButtonProps = {
   whatsappUrl: string;
   children?: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 };
 
 export function ReminderWhatsappButton({
@@ -19,6 +20,7 @@ export function ReminderWhatsappButton({
   whatsappUrl,
   children,
   className,
+  disabled,
 }: ReminderWhatsappButtonProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -26,7 +28,7 @@ export function ReminderWhatsappButton({
     <Button
       size="sm"
       className={className}
-      disabled={isPending}
+      disabled={isPending || disabled}
       onClick={() => {
         // Open WhatsApp first
         window.open(whatsappUrl, "_blank", "noopener,noreferrer");

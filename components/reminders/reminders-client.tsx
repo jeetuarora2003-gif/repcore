@@ -67,7 +67,7 @@ export function RemindersClient({
               <bucket.icon className="h-4 w-4 hidden sm:inline" />
               <span className="font-semibold">{bucket.label}</span>
               {bucket.members.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 flex items-center justify-center rounded-full bg-white/10 text-[10px] p-0">
+                <Badge variant="default" className="ml-1 h-5 min-w-5 flex items-center justify-center rounded-full bg-white/10 text-[10px] p-0">
                   {bucket.members.length}
                 </Badge>
               )}
