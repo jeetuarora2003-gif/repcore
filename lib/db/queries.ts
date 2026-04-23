@@ -833,10 +833,8 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
 
     const endMidnight = parseISO(sub.effective_end_date);
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
-    const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-    // Must be exactly 5, 3, or 1 days away
-    if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
+    // Return everyone expiring in the next 30 days for safety and debugging
+    if (daysRemaining < 0 || daysRemaining > 30) continue;
 
     results.push({
       membershipId: sub.membership_id,

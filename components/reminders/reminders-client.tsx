@@ -36,7 +36,10 @@ export function RemindersClient({
 }) {
   const filterForStage = (stage: number) => {
     return pipelineMembers.filter((m) => {
-      if (m.daysRemaining !== stage) return false;
+      // Relaxed check: +/- 1 day from target stage to account for timezone drift
+      const isMatch = Math.abs(m.daysRemaining - stage) <= 1;
+      if (!isMatch) return false;
+      
       if (stage === 5 && m.reminder5SentAt) return false;
       if (stage === 3 && m.reminder3SentAt) return false;
       if (stage === 1 && m.reminder1SentAt) return false;
@@ -113,7 +116,12 @@ export function RemindersClient({
                         className="h-10 w-10 shrink-0 ring-2 ring-white/5"
                       />
                       <div className="min-w-0">
-                        <p className="font-bold text-[15px] leading-none mb-1.5">{member.memberName}</p>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <p className="font-bold text-[15px] leading-none">{member.memberName}</p>
+                          <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">
+                            {member.daysRemaining}d
+                          </Badge>
+                        </div>
                         <p className="text-xs text-muted-foreground font-medium">{member.memberPhone} · {member.planName}</p>
                       </div>
                     </div>
