@@ -35,7 +35,16 @@ export function RemindersClient({
   gymName: string
 }) {
   const filterForStage = (stage: number) => {
-    return pipelineMembers; // DEBUG: Show everyone in every tab
+    return pipelineMembers.filter((m) => {
+      // Relaxed check: +/- 1 day from target stage to account for timezone drift
+      const isMatch = Math.abs(m.daysRemaining - stage) <= 1;
+      if (!isMatch) return false;
+      
+      if (stage === 5 && m.reminder5SentAt) return false;
+      if (stage === 3 && m.reminder3SentAt) return false;
+      if (stage === 1 && m.reminder1SentAt) return false;
+      return true;
+    });
   };
 
   const stageBuckets = STAGES.map((cfg) => ({
