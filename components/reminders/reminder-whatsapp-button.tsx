@@ -10,6 +10,7 @@ type ReminderWhatsappButtonProps = {
   stage: 5 | 3 | 1;
   whatsappUrl: string;
   children?: React.ReactNode;
+  className?: string;
 };
 
 export function ReminderWhatsappButton({
@@ -17,12 +18,14 @@ export function ReminderWhatsappButton({
   stage,
   whatsappUrl,
   children,
+  className,
 }: ReminderWhatsappButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   return (
     <Button
       size="sm"
+      className={className}
       disabled={isPending}
       onClick={() => {
         // Open WhatsApp first
