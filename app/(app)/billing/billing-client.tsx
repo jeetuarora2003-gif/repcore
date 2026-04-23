@@ -43,12 +43,13 @@ export function BillingClient({
   lastMonthRevenue,
   pendingDuesTotal,
   openInvoiceCount,
+  totalAvailableCredit,
   monthlyBreakdown,
   pendingDuesList,
   memberships,
   invoices,
   gymName,
-}: BillingClientProps) {
+}: BillingClientProps & { totalAvailableCredit: number }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedMembershipId, setSelectedMembershipId] = useState("");
 
@@ -128,7 +129,9 @@ export function BillingClient({
           <div className="rounded-3xl border border-border bg-surface p-5 shadow-panel">
             <p className="text-sm text-muted-foreground mb-1">Pending dues</p>
             <p className="text-2xl font-mono font-bold text-red-500">{formatCurrency(pendingDuesTotal)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{openInvoiceCount} open bills</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {openInvoiceCount} open bills · {formatCurrency(totalAvailableCredit)} credit avail.
+            </p>
           </div>
         </div>
 

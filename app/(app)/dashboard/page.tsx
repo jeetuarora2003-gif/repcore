@@ -145,7 +145,7 @@ export default async function DashboardPage() {
           <div className="p-4 flex flex-col items-center text-center">
             <p className="text-[22px] font-mono font-bold leading-tight">{dashboard.renewalsToday}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Renewals</p>
-            <p className="text-[10px] text-amber-500 font-medium mt-0.5">{unremindedExpiringCount} pending</p>
+            <p className="text-[10px] text-amber-500 font-medium mt-0.5">{unremindedExpiringCount} not reminded</p>
           </div>
         </div>
       </Card>

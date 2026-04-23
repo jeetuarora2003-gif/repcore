@@ -89,6 +89,9 @@ export default async function BillingPage() {
     lastMonthRevenue = financialOverview.monthlyBreakdown[financialOverview.monthlyBreakdown.length - 2].revenue;
   }
 
+  // Calculate total available credit across all members
+  const totalAvailableCredit = credits.reduce((acc, c) => acc + (c.credit_balance_paise || 0), 0);
+
   return (
     <BillingClient
       todayPayments={sortedTodayPayments}
@@ -100,6 +103,7 @@ export default async function BillingPage() {
       lastMonthRevenue={lastMonthRevenue}
       pendingDuesTotal={financialOverview.totalPendingDues}
       openInvoiceCount={financialOverview.openInvoiceCount}
+      totalAvailableCredit={totalAvailableCredit}
       monthlyBreakdown={financialOverview.monthlyBreakdown}
       pendingDuesList={pendingDuesList}
       memberships={memberships}
