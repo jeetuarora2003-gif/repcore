@@ -65,7 +65,6 @@ export default async function DashboardPage() {
 
   // ZONE 3 KPI logic
   const monthStartISO = startOfMonth(istNow).toISOString();
-  const newMembersThisMonth = dashboard.records.filter(r => r.members.joined_on && r.members.joined_on >= monthStartISO).length;
   
   const lastMonthRevenue = dashboard.monthlyBreakdown.length >= 2 
     ? dashboard.monthlyBreakdown[dashboard.monthlyBreakdown.length - 2].revenue 
@@ -158,7 +157,7 @@ export default async function DashboardPage() {
           <p className="text-[13px] text-muted-foreground">Active Members</p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-[22px] font-mono font-bold">{dashboard.activeMembersCount}</span>
-            <span className="text-[11px] text-emerald-500 font-medium">+{newMembersThisMonth} this mo</span>
+            <span className="text-[11px] text-emerald-500 font-medium">+{dashboard.newMembersThisMonth} new members</span>
           </div>
         </div>
 
