@@ -768,89 +768,75 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
-  // Fetch active memberships with their current subscription (without unregistered columns in View)
+  // 1. Fetch active subscriptions from the view
   const { data: _subscriptions, error: subError } = await supabase
     .from("v_subscription_effective_dates")
     .select("subscription_id, gym_id, membership_id, plan_snapshot_name, effective_end_date, status")
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
-  if (subError || !_subscriptions || _subscriptions.length === 0) return [];
+  if (subError || !_subscriptions || _subscriptions.length === 0) {
+    if (subError) console.error("[getRemindersPipelineData] subError:", subError.message);
+    return [];
+  }
 
   const subscriptionIds = _subscriptions.map((s: any) => s.subscription_id);
+  const membershipIds = Array.from(new Set(_subscriptions.map((s: any) => s.membership_id)));
 
-  // Safely fetch tracking columns directly from subscriptions table
-  const { data: subTracking } = await supabase
-    .from("subscriptions")
-    .select("id, reminder_5_sent_at, reminder_3_sent_at, reminder_1_sent_at")
-    .in("id", subscriptionIds);
+  // 2. Fetch tracking and membership data in parallel
+  const [trackingResp, membersResp, invoicesResp] = await Promise.all([
+    supabase.from("subscriptions").select("id, reminder_5_sent_at, reminder_3_sent_at, reminder_1_sent_at").in("id", subscriptionIds),
+    supabase.from("memberships").select("id, member_id, archived_at, lapsed_at, members(id, full_name, phone, photo_url)").eq("gym_id", gymId).in("id", membershipIds),
+    supabase.from("v_invoice_balances").select("membership_id, amount_due_paise, derived_status").eq("gym_id", gymId).in("membership_id", membershipIds)
+  ]);
 
-  const subTrackingMap = new Map((subTracking || []).map((s: any) => [s.id, s]));
+  if (membersResp.error) console.error("[getRemindersPipelineData] membersResp error:", membersResp.error.message);
 
-  // Re-map the combined subscription payload
-  const subscriptions = _subscriptions.map((s: any) => ({
-    ...s,
-    reminder_5_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_5_sent_at,
-    reminder_3_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_3_sent_at,
-    reminder_1_sent_at: subTrackingMap.get(s.subscription_id)?.reminder_1_sent_at,
+  const subTrackingMap = new Map((trackingResp.data || []).map((s: any) => [s.id, s]));
+  const membershipMap = new Map((membersResp.data || []).map((m: any) => {
+    const member = Array.isArray(m.members) ? m.members[0] : m.members;
+    return [m.id, { 
+      memberId: m.member_id, 
+      memberName: member?.full_name || "Unknown Member", 
+      memberPhone: member?.phone || "", 
+      photoUrl: member?.photo_url || null,
+      lapsed_at: m.lapsed_at,
+      archived_at: m.archived_at
+    }];
   }));
 
-  const membershipIds = subscriptions.map((s: any) => s.membership_id);
+  const duesMap = new Map<string, number>();
+  for (const inv of (invoicesResp.data || [])) {
+    if (inv.derived_status === "voided") continue;
+    duesMap.set(inv.membership_id, (duesMap.get(inv.membership_id) ?? 0) + inv.amount_due_paise);
+  }
 
-  // Fetch member info for these memberships
-  const { data: memberships, error: memError } = await supabase
-    .from("memberships")
-    .select("id, member_id, archived_at, lapsed_at, members!inner(id, full_name, phone, photo_url)")
-    .eq("gym_id", gymId)
-    .in("id", membershipIds);
-
-  if (memError || !memberships || memberships.length === 0) return [];
-
-  // Fetch invoice balances
-  const { data: invoices } = await supabase
-    .from("v_invoice_balances")
-    .select("membership_id, amount_due_paise, derived_status")
-    .eq("gym_id", gymId)
-    .in("membership_id", membershipIds);
-
-  // Calculate today in IST safely using Intl.DateTimeFormat (widely supported on Vercel/Node)
+  // 3. Calculate today in IST robustly
   const todayStr = new Intl.DateTimeFormat("en-CA", { 
     timeZone: "Asia/Kolkata", 
     year: "numeric", 
     month: "2-digit", 
     day: "2-digit" 
-  }).format(new Date()); // Returns "YYYY-MM-DD" in en-CA locale
-  
+  }).format(new Date());
   const todayMidnight = parseISO(todayStr);
-
-  const membershipMap = new Map(
-    ((memberships as any[]) ?? []).map((m: any) => {
-      const member = Array.isArray(m.members) ? m.members[0] : m.members;
-      return [m.id, { memberId: m.member_id, memberName: member.full_name, memberPhone: member.phone, photoUrl: member.photo_url }];
-    }),
-  );
-
-  // Sum dues per membership
-  const duesMap = new Map<string, number>();
-  for (const inv of (invoices as any[]) ?? []) {
-    if (inv.derived_status === "voided") continue;
-    duesMap.set(inv.membership_id, (duesMap.get(inv.membership_id) ?? 0) + inv.amount_due_paise);
-  }
 
   const results: ReminderPipelineMember[] = [];
 
-  for (const sub of subscriptions as any[]) {
+  for (const sub of _subscriptions as any[]) {
     const memberInfo = membershipMap.get(sub.membership_id);
-    if (!memberInfo) continue;
+    
+    // Skip if membership is missing, archived, or lapsed
+    if (!memberInfo || memberInfo.archived_at || memberInfo.lapsed_at) continue;
 
+    const tracking = subTrackingMap.get(sub.subscription_id);
     const duePaise = duesMap.get(sub.membership_id) ?? 0;
-    // Calculate days remaining strictly via calendar strings
+
     const endMidnight = parseISO(sub.effective_end_date);
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
-    const daysRemaining = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
+    // Must be exactly 5, 3, or 1 days away
     if (daysRemaining !== 5 && daysRemaining !== 3 && daysRemaining !== 1) continue;
-    if (memberInfo.lapsed_at) continue;
 
     results.push({
       membershipId: sub.membership_id,
@@ -863,9 +849,9 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
       endDate: sub.effective_end_date,
       daysRemaining,
       duePaise,
-      reminder5SentAt: sub.reminder_5_sent_at ?? null,
-      reminder3SentAt: sub.reminder_3_sent_at ?? null,
-      reminder1SentAt: sub.reminder_1_sent_at ?? null,
+      reminder5SentAt: tracking?.reminder_5_sent_at ?? null,
+      reminder3SentAt: tracking?.reminder_3_sent_at ?? null,
+      reminder1SentAt: tracking?.reminder_1_sent_at ?? null,
     });
   }
 
