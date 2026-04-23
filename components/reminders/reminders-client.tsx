@@ -132,14 +132,6 @@ export function RemindersClient({
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 md:w-48 justify-end">
-                      <form action={markReminderPaidAction}>
-                        <input type="hidden" name="membershipId" value={member.membershipId} />
-                        <input type="hidden" name="subscriptionId" value={member.subscriptionId} />
-                        <Button type="submit" variant="ghost" size="sm" className="h-9 px-3 text-[11px] font-bold text-muted-foreground hover:text-white transition-colors">
-                          PAID
-                        </Button>
-                      </form>
-                      
                       <ReminderWhatsappButton
                         subscriptionId={member.subscriptionId}
                         stage={bucket.stage}
