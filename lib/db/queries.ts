@@ -813,9 +813,14 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("membership_id", membershipIds);
 
-  // Calculate today in IST safely string-based to avoid UTC/Local Node.js bleeding
-  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-  const todayStr = format(nowIST, "yyyy-MM-dd");
+  // Calculate today in IST safely using Intl.DateTimeFormat (widely supported on Vercel/Node)
+  const todayStr = new Intl.DateTimeFormat("en-CA", { 
+    timeZone: "Asia/Kolkata", 
+    year: "numeric", 
+    month: "2-digit", 
+    day: "2-digit" 
+  }).format(new Date()); // Returns "YYYY-MM-DD" in en-CA locale
+  
   const todayMidnight = parseISO(todayStr);
 
   const membershipMap = new Map(
