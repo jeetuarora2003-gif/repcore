@@ -79,13 +79,20 @@ export default async function DashboardPage() {
     .sort((a, b) => b.duePaise - a.duePaise);
   
   const urgentExpiring = dashboard.records
-    .filter(r => r.status === "expiring_soon" && r.duePaise > 0)
+    .filter(r => {
+      const isExpiring = r.status === "expiring_soon";
+      const hasDues = r.duePaise > 0;
+      const sub = r.currentSubscription;
+      const notReminded = !sub?.reminder_1_sent_at && !sub?.reminder_3_sent_at && !sub?.reminder_5_sent_at;
+      
+      return isExpiring && (hasDues || notReminded);
+    })
     .map(r => {
        const endDate = r.currentSubscription?.effective_end_date ? parseISO(r.currentSubscription.effective_end_date) : null;
        const diff = endDate ? Math.ceil((endDate.getTime() - istNow.getTime()) / (1000 * 60 * 60 * 24)) : 99;
        return { ...r, daysLeft: diff };
     })
-    .filter(r => r.daysLeft >= 0 && r.daysLeft <= 3)
+    .filter(r => r.daysLeft >= 0 && r.daysLeft <= 7) // Show if expiring within the warning window
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const getInitials = (name: string) => {
@@ -244,7 +251,7 @@ export default async function DashboardPage() {
             {urgentExpiring.length > 0 && (
               <div className="rounded-2xl border border-[#FAC775] bg-[#FAEEDA] dark:bg-amber-950/20 p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-amber-900 dark:text-amber-400">Expiring in 1–3 days</p>
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-400">Expiring soon</p>
                   <p className="text-xs font-mono font-bold text-amber-700 dark:text-amber-500">{urgentExpiring.length} members</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
