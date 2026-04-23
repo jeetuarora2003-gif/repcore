@@ -768,12 +768,11 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
-  // 1. Fetch active subscriptions directly from table (bypassing view for debugging/robustness)
+  // EXTREME DEBUG: Remove all filters to see if ANYTHING is returned
   const { data: _subscriptions, error: subError } = await supabase
     .from("subscriptions")
     .select("id, gym_id, membership_id, plan_snapshot_name, end_date, status, frozen_days")
-    .eq("gym_id", gymId)
-    .in("status", ["active", "frozen"]);
+    .eq("gym_id", gymId);
 
   if (subError || !_subscriptions || _subscriptions.length === 0) {
     if (subError) console.error("[getRemindersPipelineData] subError:", subError.message);
@@ -827,8 +826,8 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
   for (const sub of _subscriptions as any[]) {
     const memberInfo = membershipMap.get(sub.membership_id);
     
-    // Skip if membership is missing, archived, or lapsed
-    if (!memberInfo || memberInfo.archived_at || memberInfo.lapsed_at) continue;
+    // DEBUG: Don't skip anyone
+    // if (!memberInfo || memberInfo.archived_at || memberInfo.lapsed_at) continue;
 
     const tracking = subTrackingMap.get(sub.id);
     const duePaise = duesMap.get(sub.membership_id) ?? 0;
@@ -842,8 +841,8 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
     const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-    // Return everyone expiring in the next 30 days for safety and debugging
-    if (daysRemaining < 0 || daysRemaining > 30) continue;
+    // DEBUG: Don't skip based on days
+    // if (daysRemaining < 0 || daysRemaining > 30) continue;
 
     results.push({
       membershipId: sub.membership_id,
