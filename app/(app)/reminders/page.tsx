@@ -6,10 +6,13 @@ import { sendAutoRemindersForGym } from "@/lib/actions/whatsapp-auto";
 import { RemindersClient } from "@/components/reminders/reminders-client";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function RemindersPage() {
   const session = await getSessionContext();
   if (!session.gym) redirect("/setup");
+
+  console.log("DEBUG gym_id being queried:", session.gym.id);
 
   // Auto-lapse expired unpaid members before rendering
   await markMembershipsLapsed(session.gym.id);
