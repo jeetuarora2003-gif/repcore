@@ -14,6 +14,7 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 import type { ReminderPipelineMember } from "@/lib/db/queries";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { sendAutoRemindersForGym } from "@/lib/actions/whatsapp-auto";
+import { cn } from "@/lib/utils/cn";
 
 export const dynamic = "force-dynamic";
 
@@ -89,20 +90,31 @@ export default async function RemindersPage() {
         </Card>
       )}
 
-      {stageBuckets.map((bucket) => {
-        if (bucket.members.length === 0) return null;
-
-        return (
-          <details key={bucket.stage} open className="group">
-            <summary className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border bg-white/[0.03] px-5 py-4 transition-colors hover:bg-white/[0.05]">
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
-              <span className="text-base font-semibold">{bucket.label}</span>
-              <Badge className={bucket.badgeColor}>
-                {bucket.members.length} member{bucket.members.length !== 1 ? "s" : ""}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {stageBuckets.map((bucket) => (
+          <div key={bucket.stage} className="flex flex-col h-full min-w-0">
+            {/* Column Header */}
+            <div className={cn(
+              "flex items-center justify-between p-4 rounded-t-2xl border-t border-x border-border bg-white/[0.03]",
+              bucket.members.length === 0 && "rounded-b-2xl border-b opacity-60"
+            )}>
+              <div className="flex items-center gap-2.5">
+                <div className={cn("h-2 w-2 rounded-full", 
+                  bucket.stage === 5 ? "bg-yellow-500" : 
+                  bucket.stage === 3 ? "bg-orange-500" : "bg-danger"
+                )} />
+                <span className="text-sm font-bold uppercase tracking-wider">{bucket.label}</span>
+              </div>
+              <Badge className={cn("rounded-lg px-2 py-0.5", bucket.badgeColor)}>
+                {bucket.members.length}
               </Badge>
-            </summary>
+            </div>
 
-            <div className="mt-3 space-y-3">
+            {/* Column Body */}
+            <div className={cn(
+              "flex-1 space-y-4 p-4 rounded-b-2xl border-x border-b border-border bg-white/[0.01]",
+              bucket.members.length === 0 && "hidden"
+            )}>
               {bucket.members.map((member) => {
                 const message = buildReminderMessage(bucket.stage, {
                   name: member.memberName,
@@ -111,48 +123,47 @@ export default async function RemindersPage() {
                 const waUrl = buildWhatsAppUrl(member.memberPhone, message);
 
                 return (
-                  <Card key={member.membershipId}>
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <MemberAvatar name={member.memberName} photoUrl={member.photoUrl} status={bucket.stage === 1 ? "expired" : "expiring_soon"} />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">{member.memberName}</p>
-                            <p className="mt-0.5 text-sm text-muted-foreground truncate">{member.memberPhone}</p>
-                          </div>
-                        </div>
-                        <Badge className={bucket.badgeColor}>{bucket.label}</Badge>
-                      </div>
-
-                      <div className="mt-3 grid gap-3 rounded-xl border border-border bg-white/[0.02] p-3 sm:grid-cols-3">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Plan</p>
-                          <p className="mt-1 text-sm font-medium">{member.planName}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Expires</p>
-                          <p className="mt-1 text-sm font-medium">{formatDate(member.endDate)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Outstanding</p>
-                          <p className="mt-1 text-sm font-semibold text-danger">{formatCurrency(member.duePaise)}</p>
+                  <Card key={member.membershipId} className="bg-white/[0.02] border-white/5 hover:border-white/10 transition-colors">
+                    <CardContent className="p-4 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <MemberAvatar 
+                          name={member.memberName} 
+                          photoUrl={member.photoUrl} 
+                          status={bucket.stage === 1 ? "expired" : "expiring_soon"} 
+                          className="h-10 w-10"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold truncate text-[15px]">{member.memberName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{member.memberPhone}</p>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap gap-3">
+                      <div className="grid grid-cols-2 gap-3 py-3 border-t border-b border-white/5">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Expires</p>
+                          <p className="text-xs font-semibold">{formatDate(member.endDate)}</p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Due</p>
+                          <p className="text-xs font-bold text-danger">{formatCurrency(member.duePaise)}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
                         <ReminderWhatsappButton
                           subscriptionId={member.subscriptionId}
                           stage={bucket.stage}
                           whatsappUrl={waUrl}
+                          className="w-full h-9 text-xs"
                         >
-                          Send Reminder
+                          Send WhatsApp
                         </ReminderWhatsappButton>
 
-                        <form action={markReminderPaidAction}>
+                        <form action={markReminderPaidAction} className="w-full">
                           <input type="hidden" name="membershipId" value={member.membershipId} />
                           <input type="hidden" name="subscriptionId" value={member.subscriptionId} />
-                          <Button type="submit" variant="outline" size="sm">
-                            Fee Paid ({formatCurrency(member.duePaise)})
+                          <Button type="submit" variant="ghost" size="sm" className="w-full h-9 text-[11px] text-muted-foreground hover:text-white">
+                            Mark as Paid
                           </Button>
                         </form>
                       </div>
@@ -161,9 +172,15 @@ export default async function RemindersPage() {
                 );
               })}
             </div>
-          </details>
-        );
-      })}
+
+            {bucket.members.length === 0 && (
+              <div className="mt-4 p-8 rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center text-center opacity-40">
+                <p className="text-xs font-medium italic">No reminders</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
