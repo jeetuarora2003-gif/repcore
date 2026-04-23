@@ -118,7 +118,7 @@ export function RemindersClient({
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
                           <p className="font-bold text-[15px] leading-none">{member.memberName}</p>
-                          <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">
+                          <Badge variant="default" className="text-[9px] h-4 px-1 opacity-50">
                             {member.daysRemaining}d
                           </Badge>
                         </div>
