@@ -768,9 +768,16 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
-  // STEP 2 & 3: Diagnosis logs
   const { data: { user } } = await supabase.auth.getUser();
   console.log('DEBUG reminders user:', user?.id);
+
+  // Check RLS visibility for members
+  const { count: mCount, error: mErr } = await supabase.from('members').select('*', { count: 'exact', head: true });
+  console.log('DEBUG RLS members count:', mCount, mErr?.message);
+
+  // Check RLS visibility for subscriptions
+  const { count: sCount, error: sErr } = await supabase.from('subscriptions').select('*', { count: 'exact', head: true });
+  console.log('DEBUG RLS subscriptions count:', sCount, sErr?.message);
 
   const { data: gymCheck } = await supabase
     .from('gym_users')
