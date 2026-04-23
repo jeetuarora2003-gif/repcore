@@ -354,7 +354,13 @@ export async function getDashboardData(gymId: string, warningDays: number) {
 
   const activeMembersCount = records.filter((item) => ["active", "expiring_soon", "frozen"].includes(item.status)).length;
   const expiringThisWeek = records.filter((item) => item.status === "expiring_soon");
-  const pendingDueAmount = records.reduce((sum, item) => sum + item.duePaise, 0);
+  
+  const dueRecords = records.filter(item => 
+    item.duePaise > 0 && ["active", "expiring_soon", "frozen"].includes(item.status)
+  );
+  
+  const pendingDueAmount = dueRecords.reduce((sum, item) => sum + item.duePaise, 0);
+  const pendingDueCount = dueRecords.length;
   const monthlyRevenue = payments
     .filter((payment) => {
       const received = toDate(payment.received_on);
@@ -420,6 +426,7 @@ export async function getDashboardData(gymId: string, warningDays: number) {
     activeMembersCount,
     expiringThisWeek,
     pendingDueAmount,
+    pendingDueCount,
     monthlyRevenue,
     monthlyBreakdown,
     recentActivity,
