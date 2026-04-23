@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SetupSubmitButton } from "@/components/shared/setup-submit-button";
 
 export default async function SetupPage({
   searchParams,
@@ -60,9 +61,7 @@ export default async function SetupPage({
               </label>
               {searchParams.error ? <p className="col-span-full text-sm text-danger">{searchParams.error}</p> : null}
               <div className="col-span-full flex justify-end">
-                <Button type="submit" size="lg">
-                  Finish setup
-                </Button>
+                <SetupSubmitButton />
               </div>
             </form>
           </CardContent>
