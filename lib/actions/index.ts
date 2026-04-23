@@ -360,8 +360,8 @@ export async function createMembershipSaleAction(formData: FormData) {
       receivedOn: new Date().toISOString().split("T")[0],
       allocations: [
         {
-          invoice_id: rpcData.invoice_id,
-          amount_paise: toPaise(values.paidAmountRupees),
+          invoiceId: rpcData.invoice_id,
+          amountPaise: toPaise(values.paidAmountRupees),
         },
       ],
       referenceCode: values.paymentReference || undefined,
@@ -371,7 +371,8 @@ export async function createMembershipSaleAction(formData: FormData) {
   }
 
   revalidatePath("/members");
-  revalidatePath("/members");
+  revalidatePath("/billing");
+  revalidatePath("/reminders");
   revalidatePath("/dashboard");
   redirect("/members?success=Member+added+successfully");
 }
@@ -433,7 +434,7 @@ export async function recordPaymentAction(formData: FormData) {
 
   const fallbackAllocations =
     allocationInvoiceId
-      ? [{ invoiceId: allocationInvoiceId, amountRupees: allocationAmountRupees || asString(formData.get("amountRupees")) }]
+      ? [{ invoiceId: allocationInvoiceId, amountPaise: toPaise(allocationAmountRupees || asString(formData.get("amountRupees"))) }]
       : [];
 
   const values = recordPaymentSchema.parse({
