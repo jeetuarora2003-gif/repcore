@@ -18,7 +18,7 @@ export const onboardingSchema = z.object({
   firstPlanName: z.string().min(2),
   firstPlanDurationDays: z.coerce.number().int().positive(),
   firstPlanPriceRupees: z.coerce.number().nonnegative(),
-  renewalMode: z.enum(["continue_from_last_end", "restart_from_today"]),
+  renewalMode: z.enum(["continue_from_last_end", "restart_from_today"]).default("continue_from_last_end"),
   gstEnabled: z.coerce.boolean().default(false),
 });
 

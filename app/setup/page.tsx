@@ -53,18 +53,6 @@ export default async function SetupPage({
                 <Label htmlFor="firstPlanPriceRupees">Plan price (INR)</Label>
                 <Input id="firstPlanPriceRupees" name="firstPlanPriceRupees" type="number" step="0.01" defaultValue="1500" required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="renewalMode">Renewal mode</Label>
-                <select
-                  id="renewalMode"
-                  name="renewalMode"
-                  defaultValue="continue_from_last_end"
-                  className="flex h-11 w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  <option value="continue_from_last_end">Continue from last end date</option>
-                  <option value="restart_from_today">Restart from today</option>
-                </select>
-              </div>
               <input type="hidden" name="timezone" value="Asia/Kolkata" />
               <label className="col-span-full flex items-center gap-3 rounded-2xl border border-border bg-white/[0.04] px-4 py-3">
                 <input type="checkbox" name="gstEnabled" className="h-4 w-4 accent-[#2563EB]" />
