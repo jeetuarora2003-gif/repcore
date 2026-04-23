@@ -181,7 +181,7 @@ export default async function DashboardPage() {
           <p className="text-[13px] text-muted-foreground">Pending Dues</p>
           <div className="mt-2 flex flex-col">
             <span className="text-[22px] font-mono font-bold text-red-500 truncate">₹{Math.floor(dashboard.pendingDueAmount/100).toLocaleString()}</span>
-            <span className="text-[11px] text-red-500 font-medium">{dashboard.records.filter(r => r.duePaise > 0).length} members</span>
+            <span className="text-[11px] text-red-500 font-medium">{dashboard.pendingDueCount} members</span>
           </div>
         </div>
 
