@@ -5,7 +5,17 @@ import { Search } from "lucide-react";
 
 type Option = { id: string; label: string };
 
-export function MemberSearchSelect({ name, memberships, defaultValue }: { name: string; memberships: Option[]; defaultValue?: string }) {
+export function MemberSearchSelect({ 
+  name, 
+  memberships, 
+  defaultValue,
+  onChange 
+}: { 
+  name: string; 
+  memberships: Option[]; 
+  defaultValue?: string;
+  onChange?: (id: string) => void;
+}) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Option | null>(
@@ -40,7 +50,11 @@ export function MemberSearchSelect({ name, memberships, defaultValue }: { name: 
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
           placeholder={selected ? selected.label : "Search member..."}
           value={open ? query : (selected?.label ?? "")}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onChange={(e) => { 
+            setQuery(e.target.value); 
+            setOpen(true);
+            if (!e.target.value && !selected) onChange?.(""); 
+          }}
           onFocus={() => { setOpen(true); setQuery(""); }}
         />
       </div>
@@ -50,7 +64,13 @@ export function MemberSearchSelect({ name, memberships, defaultValue }: { name: 
             <li
               key={m.id}
               className="px-4 py-3 text-sm cursor-pointer hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); setSelected(m); setOpen(false); setQuery(""); }}
+              onMouseDown={(e) => { 
+                e.preventDefault(); 
+                setSelected(m); 
+                onChange?.(m.id);
+                setOpen(false); 
+                setQuery(""); 
+              }}
             >
               {m.label}
             </li>

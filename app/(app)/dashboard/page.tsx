@@ -30,6 +30,7 @@ import { getDashboardData } from "@/lib/db/queries";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { MemberSearchSelect } from "@/components/shared/member-search-select";
 import { cn } from "@/lib/utils/cn";
+import { DashboardQuickCheckin } from "@/components/dashboard/quick-checkin";
 import { format, subDays, startOfMonth, isSameDay, parseISO } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -197,25 +198,13 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ZONE 4 — QUICK CHECK-IN */}
-      <div className="space-y-3">
-        <p className="text-sm font-medium px-1">Quick check-in</p>
-        <form action={markAttendanceAction} className="flex gap-2">
-          <div className="flex-1 min-w-0">
-             <MemberSearchSelect
-                name="membershipId"
-                memberships={dashboard.memberships.map((m) => ({
-                  id: m.id,
-                  label: `${m.members.full_name} (${m.members.phone})`,
-                }))}
-              />
-              <input type="hidden" name="checkInDate" value={todayStr} />
-          </div>
-          <Button type="submit" className="h-[48px] px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-glow shrink-0">
-            Check In
-          </Button>
-        </form>
-      </div>
+      <DashboardQuickCheckin 
+        todayStr={todayStr}
+        memberships={dashboard.memberships.map((m) => ({
+          id: m.id,
+          label: `${m.members.full_name} (${m.members.phone})`,
+        }))}
+      />
 
       {/* ZONE 5 — NEEDS ATTENTION */}
       {(lapsedUnpaid.length > 0 || urgentExpiring.length > 0) ? (

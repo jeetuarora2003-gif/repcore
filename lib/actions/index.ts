@@ -518,9 +518,17 @@ export async function correctInvoiceAction(formData: FormData) {
 export async function markAttendanceAction(formData: FormData) {
   const session = await requireGymContext();
   const supabase = createSupabaseServerClient();
+  
+  const membershipId = asString(formData.get("membershipId"));
+  const checkInDate = asString(formData.get("checkInDate"));
+
+  if (!membershipId) {
+    redirect(`/dashboard?error=${encodeURIComponent("Please select a member first")}`);
+  }
+
   const values = attendanceSchema.parse({
-    membershipId: asString(formData.get("membershipId")),
-    checkInDate: asString(formData.get("checkInDate")),
+    membershipId,
+    checkInDate,
   });
 
   if (session.settings?.freeze_blocks_checkin) {
