@@ -355,6 +355,11 @@ export async function getDashboardData(gymId: string, warningDays: number) {
   const activeMembersCount = records.filter((item) => ["active", "expiring_soon", "frozen"].includes(item.status)).length;
   const expiringThisWeek = records.filter((item) => item.status === "expiring_soon");
   
+  const newMembersThisMonth = records.filter(item => {
+    const joinedDate = item.members.created_at ? parseISO(item.members.created_at) : null;
+    return joinedDate && !isBefore(joinedDate, monthStart) && !isAfter(joinedDate, monthEnd);
+  }).length;
+  
   const dueRecords = records.filter(item => 
     item.duePaise > 0 && ["active", "expiring_soon"].includes(item.status)
   );
@@ -424,6 +429,7 @@ export async function getDashboardData(gymId: string, warningDays: number) {
   return {
     records,
     activeMembersCount,
+    newMembersThisMonth,
     expiringThisWeek,
     pendingDueAmount,
     pendingDueCount,
