@@ -775,12 +775,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
-  if (subError || !_subscriptions || _subscriptions.length === 0) return [{
-    membershipId: "DEBUG",
-    planName: "ERROR_OR_ZERO_SUBS",
-    memberName: subError ? subError.message : "ZERO_SUBS",
-    daysRemaining: -1
-  } as any];
+  if (subError || !_subscriptions || _subscriptions.length === 0) return [];
 
   const subscriptionIds = _subscriptions.map((s: any) => s.subscription_id);
 
@@ -809,12 +804,7 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     .eq("gym_id", gymId)
     .in("id", membershipIds);
 
-  if (memError || !memberships || memberships.length === 0) return [{
-    membershipId: "DEBUG",
-    planName: memError ? "SQL_ERROR_ON_MEMBERSHIPS" : "NO_MEMBERSHIPS_FOUND_IN_TABLE",
-    memberName: memError ? memError.message : `GymId: ${gymId}. Count from Subscriptions: ${subscriptions.length}. IDs: ${membershipIds.slice(0, 3).join(",")}`,
-    daysRemaining: -1
-  } as any];
+  if (memError || !memberships || memberships.length === 0) return [];
 
   // Fetch invoice balances
   const { data: invoices } = await supabase
