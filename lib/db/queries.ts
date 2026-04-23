@@ -768,6 +768,23 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
+  // STEP 2 & 3: Diagnosis logs
+  const { data: { user } } = await supabase.auth.getUser();
+  console.log('DEBUG reminders user:', user?.id);
+
+  const { data: gymCheck } = await supabase
+    .from('gym_users')
+    .select('gym_id, role')
+    .eq('user_id', user?.id ?? '')
+    .single();
+  console.log('DEBUG gym_users row:', gymCheck);
+
+  const { data: testData, error: testError } = await supabase
+    .from('subscriptions')
+    .select('id, end_date')
+    .limit(5);
+  console.log('DEBUG subscriptions test:', testData, testError);
+
     // 1. Fetch active subscriptions directly from table (bypassing view for debugging/robustness)
   const { data: _subscriptions, error: subError } = await supabase
     .from("subscriptions")
