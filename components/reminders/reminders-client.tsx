@@ -144,9 +144,10 @@ export function RemindersClient({
                         subscriptionId={member.subscriptionId}
                         stage={bucket.stage}
                         whatsappUrl={waUrl}
+                        disabled={!member.memberPhone}
                         className="h-9 px-4 text-xs font-bold bg-accent hover:bg-accent/90"
                       >
-                        SEND
+                        {member.memberPhone ? "SEND" : "NO PHONE"}
                       </ReminderWhatsappButton>
                     </div>
                   </div>
