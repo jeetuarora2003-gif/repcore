@@ -357,11 +357,11 @@ export async function createMembershipSaleAction(formData: FormData) {
       membershipId: rpcData.membership_id,
       amountPaise: toPaise(values.paidAmountRupees),
       method: values.paymentMethod,
-      receivedOn: new Date().toISOString(),
+      receivedOn: new Date().toISOString().split("T")[0],
       allocations: [
         {
-          invoiceId: rpcData.invoice_id,
-          amountPaise: toPaise(values.paidAmountRupees),
+          invoice_id: rpcData.invoice_id,
+          amount_paise: toPaise(values.paidAmountRupees),
         },
       ],
       referenceCode: values.paymentReference || undefined,
@@ -455,8 +455,8 @@ export async function recordPaymentAction(formData: FormData) {
     referenceCode: values.referenceCode,
     note: values.note,
     allocations: values.allocations.map((item) => ({
-      invoiceId: item.invoiceId,
-      amountPaise: toPaise(item.amountRupees),
+      invoice_id: item.invoiceId,
+      amount_paise: toPaise(item.amountRupees),
     })),
   });
 
