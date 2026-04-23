@@ -716,14 +716,15 @@ export async function markReminderPaidAction(formData: FormData) {
     assertSupabaseSuccess(error);
   }
 
-  // Clear reminder columns on the subscription
+  // Mark reminders as "handled" on the subscription so they leave the pipeline
   if (subscriptionId) {
+    const now = new Date().toISOString();
     await supabase
       .from("subscriptions")
       .update({
-        reminder_5_sent_at: null,
-        reminder_3_sent_at: null,
-        reminder_1_sent_at: null,
+        reminder_5_sent_at: now,
+        reminder_3_sent_at: now,
+        reminder_1_sent_at: now,
       })
       .eq("id", subscriptionId)
       .eq("gym_id", session.gym!.id);
