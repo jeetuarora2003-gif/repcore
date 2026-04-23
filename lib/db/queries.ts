@@ -768,10 +768,10 @@ export type ReminderPipelineMember = {
 export async function getRemindersPipelineData(gymId: string): Promise<ReminderPipelineMember[]> {
   const supabase = createSupabaseServerClient();
 
-  // 1. Fetch active subscriptions from the view
+  // 1. Fetch active subscriptions directly from table (bypassing view for debugging/robustness)
   const { data: _subscriptions, error: subError } = await supabase
-    .from("v_subscription_effective_dates")
-    .select("subscription_id, gym_id, membership_id, plan_snapshot_name, effective_end_date, status")
+    .from("subscriptions")
+    .select("id, gym_id, membership_id, plan_snapshot_name, end_date, status, frozen_days")
     .eq("gym_id", gymId)
     .in("status", ["active", "frozen"]);
 
@@ -780,8 +780,10 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     return [];
   }
 
-  const subscriptionIds = _subscriptions.map((s: any) => s.subscription_id);
+  const subscriptionIds = _subscriptions.map((s: any) => s.id);
   const membershipIds = Array.from(new Set(_subscriptions.map((s: any) => s.membership_id)));
+
+  if (subscriptionIds.length === 0) return [];
 
   // 2. Fetch tracking and membership data in parallel
   const [trackingResp, membersResp, invoicesResp] = await Promise.all([
@@ -828,11 +830,18 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
     // Skip if membership is missing, archived, or lapsed
     if (!memberInfo || memberInfo.archived_at || memberInfo.lapsed_at) continue;
 
-    const tracking = subTrackingMap.get(sub.subscription_id);
+    const tracking = subTrackingMap.get(sub.id);
     const duePaise = duesMap.get(sub.membership_id) ?? 0;
 
-    const endMidnight = parseISO(sub.effective_end_date);
+    // Manually calculate effective end date (end_date + frozen_days)
+    const endMidnight = parseISO(sub.end_date);
+    if (sub.frozen_days > 0) {
+      endMidnight.setDate(endMidnight.getDate() + sub.frozen_days);
+    }
+    
     const diffMs = endMidnight.getTime() - todayMidnight.getTime();
+    const daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
     // Return everyone expiring in the next 30 days for safety and debugging
     if (daysRemaining < 0 || daysRemaining > 30) continue;
 
@@ -842,9 +851,9 @@ export async function getRemindersPipelineData(gymId: string): Promise<ReminderP
       memberName: memberInfo.memberName,
       memberPhone: memberInfo.memberPhone,
       photoUrl: memberInfo.photoUrl,
-      subscriptionId: sub.subscription_id,
+      subscriptionId: sub.id,
       planName: sub.plan_snapshot_name,
-      endDate: sub.effective_end_date,
+      endDate: sub.end_date,
       daysRemaining,
       duePaise,
       reminder5SentAt: tracking?.reminder_5_sent_at ?? null,
