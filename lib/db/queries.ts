@@ -356,7 +356,7 @@ export async function getDashboardData(gymId: string, warningDays: number) {
   const expiringThisWeek = records.filter((item) => item.status === "expiring_soon");
   
   const dueRecords = records.filter(item => 
-    item.duePaise > 0 && ["active", "expiring_soon", "frozen"].includes(item.status)
+    item.duePaise > 0 && ["active", "expiring_soon"].includes(item.status)
   );
   
   const pendingDueAmount = dueRecords.reduce((sum, item) => sum + item.duePaise, 0);
