@@ -5,14 +5,14 @@ RepCore is a mobile-first gym management SaaS for independent Indian gyms. It is
 ## Highlights
 
 - Next.js 14 App Router application with responsive mobile-first UI
-- Premium dark design system tuned for low-friction daily operations
+- Responsive dark interface for daily gym operations
 - Supabase-backed auth, multi-tenant data model, RLS, and RPC-driven mutations
 - Member lifecycle support: joins, renewals, rejoin, freeze, archive
 - Billing model with invoices, partial payments, allocations, overpayment credit, and invoice correction
 - Manual WhatsApp reminders for Basic and upgrade path for Growth automation
 - Attendance logging with one check-in per member per day. Hardware integration with ZKTeco ADMS via push webhooks and file-based parser.
 - PWA-ready with manifest and service worker
-- Suspense-compatible skeleton loaders and error boundaries for a high-performance experience
+- Suspense-compatible loading states and error boundaries
 
 ## Stack
 
@@ -130,6 +130,10 @@ public/                 Static assets, icons, service worker
 supabase/migrations/    Database schema and RPC migrations
 ```
 
-## Status
+## Project Status
 
-RepCore V1 is build-clean and stable. Recent enhancements include a unified Add Member wizard, a comprehensive real-time financial dashboard embedded within the billing page, scalable biometric attendance processing, and dynamic loading UI. Ready for production deployment!
+This repository contains the gym-management implementation described above. Runtime workflows require a configured Supabase project and database migrations. A hosted preview is linked in the repository About section; its availability and full workflow behaviour are not guaranteed by this README.
+
+The separate repcore-new repository contains an alternative implementation. This repository is the main documented portfolio reference; neither version is claimed to supersede the other.
+
+PWA support refers to browser installation and does not mean the application has been published on Google Play or the Apple App Store.
